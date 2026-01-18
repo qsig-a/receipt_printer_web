@@ -7,9 +7,9 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: northamerica-northeast2
   SERVICE_NAME: receipt-portal
-  # Updated for Artifact Registry format
-  IMAGE_NAME: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_AR_REPO }}/receipt-portal:${{ github.sha }}
+  AR_REPO: "gcf-artifacts" 
 
 jobs:
   deploy:
@@ -30,21 +30,25 @@ jobs:
 
       - name: Build and Push Container
         run: |
-          gcloud builds submit --tag ${{ env.IMAGE_NAME }} --async
+          IMAGE_PATH="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/receipt-portal:${{ github.sha }}"
+          
+          gcloud builds submit --tag $IMAGE_PATH --async
+          
+          echo "FINAL_IMAGE=$IMAGE_PATH" >> $GITHUB_ENV
 
-      - name: Wait for Build
+      - name: Wait for Image
         run: |
-          echo "Waiting for build to finish..."
-          until gcloud artifacts docker images describe ${{ env.IMAGE_NAME }} > /dev/null 2>&1; do
-            echo "Image not ready yet... sleeping 10s"
+          echo "Waiting for image in Artifact Registry..."
+          until gcloud artifacts docker images describe ${{ env.FINAL_IMAGE }} > /dev/null 2>&1; do
+            echo "Image not found yet... retrying in 10s"
             sleep 10
           done
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image ${{ env.IMAGE_NAME }} \
-            --region ${{ secrets.GCP_REGION }} \
+            --image ${{ env.FINAL_IMAGE }} \
+            --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated \
             --set-env-vars WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}" \
