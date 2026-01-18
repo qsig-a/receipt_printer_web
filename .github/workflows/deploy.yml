@@ -7,9 +7,9 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: northamerica-northeast2
   SERVICE_NAME: receipt-portal
-  IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/receipt-portal:${{ github.sha }}
+  # Updated for Artifact Registry format
+  IMAGE_NAME: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_AR_REPO }}/receipt-portal:${{ github.sha }}
 
 jobs:
   deploy:
@@ -29,17 +29,22 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Build and Push Container
-        # We remove the redirection to /dev/null but keep --suppress-logs
-        # This keeps the logs clean but lets the error through if it fails
         run: |
-          gcloud builds submit --tag ${{ env.IMAGE_NAME }} --suppress-logs
+          gcloud builds submit --tag ${{ env.IMAGE_NAME }} --async
+
+      - name: Wait for Build
+        run: |
+          echo "Waiting for build to finish..."
+          until gcloud artifacts docker images describe ${{ env.IMAGE_NAME }} > /dev/null 2>&1; do
+            echo "Image not ready yet... sleeping 10s"
+            sleep 10
+          done
 
       - name: Deploy to Cloud Run
-        # We use --quiet and avoid redirection to see the actual error if deployment fails
         run: |
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image ${{ env.IMAGE_NAME }} \
-            --region ${{ env.REGION }} \
+            --region ${{ secrets.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
             --set-env-vars WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}" \
