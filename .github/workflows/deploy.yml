@@ -29,12 +29,13 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Build and Push Container
-        # --suppress-logs prevents streaming; > /dev/null hides the CLI response (including links)
+        # We remove the redirection to /dev/null but keep --suppress-logs
+        # This keeps the logs clean but lets the error through if it fails
         run: |
-          gcloud builds submit --tag ${{ env.IMAGE_NAME }} --suppress-logs > /dev/null 2>&1
+          gcloud builds submit --tag ${{ env.IMAGE_NAME }} --suppress-logs
 
       - name: Deploy to Cloud Run
-        # --quiet prevents interactive prompts; > /dev/null hides the service URL and logs links
+        # We use --quiet and avoid redirection to see the actual error if deployment fails
         run: |
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image ${{ env.IMAGE_NAME }} \
@@ -45,4 +46,4 @@ jobs:
             --set-env-vars ACCESS_PASSWORD="${{ secrets.ACCESS_PASSWORD }}" \
             --set-env-vars ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
             --set-env-vars CHARACTER_LIMIT=280 \
-            --quiet > /dev/null 2>&1
+            --quiet
