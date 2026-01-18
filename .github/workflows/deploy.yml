@@ -9,7 +9,7 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: northamerica-northeast2
   SERVICE_NAME: receipt-portal
-  AR_REPO: "gcf-artifacts" 
+  AR_REPO: "gcf-artifacts"
 
 jobs:
   deploy:
@@ -31,9 +31,7 @@ jobs:
       - name: Build and Push Container
         run: |
           IMAGE_PATH="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/receipt-portal:${{ github.sha }}"
-          
           gcloud builds submit --tag $IMAGE_PATH --async
-          
           echo "FINAL_IMAGE=$IMAGE_PATH" >> $GITHUB_ENV
 
       - name: Wait for Image
@@ -54,6 +52,10 @@ jobs:
             --set-env-vars WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}" \
             --set-env-vars ACCESS_PASSWORD="${{ secrets.ACCESS_PASSWORD }}" \
             --set-env-vars ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
+            --set-env-vars SIGNALWIRE_PROJECT_ID="${{ secrets.SIGNALWIRE_PROJECT_ID }}" \
+            --set-env-vars SIGNALWIRE_TOKEN="${{ secrets.SIGNALWIRE_TOKEN }}" \
+            --set-env-vars SIGNALWIRE_SPACE_URL="${{ secrets.SIGNALWIRE_SPACE_URL }}" \
+            --set-env-vars SIGNALWIRE_FROM_NUMBER="${{ secrets.SIGNALWIRE_FROM_NUMBER }}" \
             --set-env-vars CHARACTER_LIMIT=280 \
             --quiet \
             --verbosity=error \

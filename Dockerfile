@@ -10,7 +10,7 @@ WORKDIR $APP_HOME
 COPY . ./
 
 # Install production dependencies
-RUN pip install flask requests google-cloud-firestore gunicorn
+RUN pip install flask requests google-cloud-firestore gunicorn signalwire==2.1.1
 
 # Run the web service on container startup using gunicorn
 # Cloud Run passes the port as an environment variable

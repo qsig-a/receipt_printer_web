@@ -20,7 +20,7 @@ A lightweight Flask web application that serves as a portal to send text message
 1. Clone the repository.
 2. Install the required dependencies:
    ```bash
-   pip install flask requests google-cloud-firestore
+   pip install flask requests google-cloud-firestore signalwire==2.1.1
    ```
 
 ## Configuration
@@ -35,10 +35,21 @@ The application is configured using environment variables. You can set these in 
 | `PORT` | The port the web server listens on. | `5000` |
 | `CHARACTER_LIMIT` | Optional integer limit for message length. | `None` |
 
+### SignalWire Configuration (SMS Support)
+
+To enable the SMS feature, you must provide the following:
+
+| Variable | Description |
+|----------|-------------|
+| `SIGNALWIRE_PROJECT_ID` | Your SignalWire Project ID. |
+| `SIGNALWIRE_TOKEN` | Your SignalWire API Token. |
+| `SIGNALWIRE_SPACE_URL` | Your SignalWire Space URL (e.g., `example.signalwire.com`). |
+| `SIGNALWIRE_FROM_NUMBER` | The phone number owned by your SignalWire project. |
+
 ## Running Locally
 
 1. **Authentication**: If running outside of Google Cloud, you must set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your service account JSON key.
-   
+
 2. **Start the App**:
    ```bash
    python app.py
