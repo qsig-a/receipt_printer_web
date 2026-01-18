@@ -5,6 +5,7 @@ import io
 import csv
 from datetime import datetime
 from google.cloud import firestore
+from signalwire.rest import Client as signalwire_client
 
 app = Flask(__name__)
 
@@ -14,6 +15,12 @@ WEBHOOK_URL = os.environ.get('WEBHOOK_URL', 'https://hooks.nabucasa.com/default_
 ACCESS_PASSWORD = os.environ.get('ACCESS_PASSWORD', 'password')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'adminpassword')
 
+# SignalWire Configuration
+SIGNALWIRE_PROJECT_ID = os.environ.get('SIGNALWIRE_PROJECT_ID')
+SIGNALWIRE_TOKEN = os.environ.get('SIGNALWIRE_TOKEN')
+SIGNALWIRE_SPACE_URL = os.environ.get('SIGNALWIRE_SPACE_URL')
+SIGNALWIRE_FROM_NUMBER = os.environ.get('SIGNALWIRE_FROM_NUMBER')
+
 # Convert the string env variable to an integer if it exists
 char_limit_raw = os.environ.get('CHARACTER_LIMIT')
 CHARACTER_LIMIT = int(char_limit_raw) if char_limit_raw and char_limit_raw.isdigit() else None
@@ -22,6 +29,7 @@ CHARACTER_LIMIT = int(char_limit_raw) if char_limit_raw and char_limit_raw.isdig
 # Note: On Cloud Run, it automatically uses the project ID from the environment
 db = firestore.Client(database="receipt-printer")
 COLLECTION_NAME = "print_history"
+SMS_PENDING_COLLECTION = "sms_pending"
 
 # --- UI Templates (Unchanged) ---
 SHARED_CSS = """
@@ -112,13 +120,13 @@ HISTORY_HTML = """
         <div style="max-height: 500px; overflow-y: auto;">
             <table class="history-table">
                 <thead>
-                    <tr><th>Time</th><th>IP Address</th><th>Status</th><th>Message</th></tr>
+                    <tr><th>Time</th><th>Source</th><th>Status</th><th>Message</th></tr>
                 </thead>
                 <tbody>
                     {% for log in logs %}
                     <tr>
                         <td style="white-space: nowrap; color: #64748b;">{{ log.time }}</td>
-                        <td style="font-family: monospace;">{{ log.ip }}</td>
+                        <td style="font-family: monospace;">{{ log.source }}</td>
                         <td><span class="badge {% if log.status == 'SUCCESS' %}badge-ok{% else %}badge-err{% endif %}">{{ log.status }}</span></td>
                         <td style="word-break: break-all;">{{ log.msg }}</td>
                     </tr>
@@ -145,12 +153,29 @@ HISTORY_HTML = """
 
 # --- Helper Functions ---
 
-def log_to_firestore(ip, status, message):
+def send_sms(to_number, body):
+    """Sends an SMS using SignalWire."""
+    if not all([SIGNALWIRE_PROJECT_ID, SIGNALWIRE_TOKEN, SIGNALWIRE_SPACE_URL, SIGNALWIRE_FROM_NUMBER]):
+        print("SignalWire configuration missing, skipping SMS.")
+        return
+
+    try:
+        client = signalwire_client(SIGNALWIRE_PROJECT_ID, SIGNALWIRE_TOKEN, signalwire_space_url=SIGNALWIRE_SPACE_URL)
+        message = client.messages.create(
+            from_=SIGNALWIRE_FROM_NUMBER,
+            to=to_number,
+            body=body
+        )
+        print(f"SMS sent to {to_number}: {message.sid}")
+    except Exception as e:
+        print(f"Failed to send SMS: {e}")
+
+def log_to_firestore(source, status, message):
     """Saves a log entry to Google Firestore."""
     doc_ref = db.collection(COLLECTION_NAME).document()
     doc_ref.set({
         'timestamp': firestore.SERVER_TIMESTAMP,
-        'ip': ip,
+        'source': source,
         'status': status,
         'message': message
     })
@@ -164,9 +189,11 @@ def get_logs_from_firestore():
         # Handle cases where SERVER_TIMESTAMP hasn't resolved yet
         ts = data.get('timestamp')
         time_str = ts.strftime('%Y-%m-%d %H:%M:%S') if ts else "Just now"
+        # Backwards compatibility: check 'source', then 'ip'
+        source = data.get('source') or data.get('ip', 'Unknown')
         logs.append({
             'time': time_str,
-            'ip': data.get('ip', 'Unknown'),
+            'source': source,
             'status': data.get('status', 'ERROR'),
             'msg': data.get('message', '')
         })
@@ -217,9 +244,9 @@ def download_csv():
         logs = get_logs_from_firestore()
         si = io.StringIO()
         cw = csv.writer(si)
-        cw.writerow(['Time', 'IP Address', 'Status', 'Message'])
+        cw.writerow(['Time', 'Source', 'Status', 'Message'])
         for log in logs:
-            cw.writerow([log['time'], log['ip'], log['status'], log['msg']])
+            cw.writerow([log['time'], log['source'], log['status'], log['msg']])
         return Response(si.getvalue(), mimetype="text/csv", 
                         headers={"Content-disposition": "attachment; filename=history.csv"})
     return "Unauthorized", 401
@@ -235,6 +262,63 @@ def clear_history():
         batch.commit()
         return redirect(url_for('index'))
     return "Unauthorized", 401
+
+@app.route('/sms', methods=['POST'])
+def sms_webhook():
+    """Handles incoming SMS from SignalWire."""
+    # SignalWire sends form data with From, Body, etc.
+    from_number = request.form.get('From')
+    body = request.form.get('Body', '').strip()
+
+    if not from_number:
+        return "Missing From number", 400
+
+    # Check if there is a pending message for this number
+    pending_ref = db.collection(SMS_PENDING_COLLECTION).document(from_number)
+    pending_doc = pending_ref.get()
+
+    if not pending_doc.exists:
+        # New message -> Store it and ask for password
+        pending_ref.set({
+            'message': body,
+            'timestamp': firestore.SERVER_TIMESTAMP
+        })
+        send_sms(from_number, "Please reply with the access password to print your message.")
+        return "OK" # SignalWire expects 200 OK
+    else:
+        # Pending message exists -> This is the password attempt
+        pending_data = pending_doc.to_dict()
+        original_message = pending_data.get('message')
+
+        if body == ACCESS_PASSWORD:
+            # Password correct
+            try:
+                # Send to printer webhook
+                r = requests.post(WEBHOOK_URL, json={"message": original_message}, timeout=10)
+                if r.status_code == 200:
+                    log_to_firestore(from_number, "SUCCESS", original_message)
+                    send_sms(from_number, "✅ Message printed successfully!")
+                else:
+                    log_to_firestore(from_number, f"HA_ERR_{r.status_code}", original_message)
+                    send_sms(from_number, f"❌ Error printing message. HA replied: {r.status_code}")
+            except Exception as e:
+                log_to_firestore(from_number, "CONN_FAIL", f"{original_message} (Error: {str(e)})")
+                send_sms(from_number, "❌ Connection error while printing.")
+
+            # Clear pending status
+            pending_ref.delete()
+        else:
+            # Password incorrect
+            log_to_firestore(from_number, "DENIED", original_message)
+            send_sms(from_number, "❌ Invalid password. Access denied.")
+            # Note: We are keeping the pending state so they can try the password again
+            # or we could delete it? The prompt implies "verify by replying...".
+            # If they fail, maybe they should re-send the message or just retry password.
+            # Let's delete it to enforce the flow "Send Message -> Send Password".
+            # If they fail password, they start over. This prevents stuck states.
+            pending_ref.delete()
+
+    return "OK"
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
