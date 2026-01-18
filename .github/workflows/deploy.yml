@@ -1,0 +1,64 @@
+name: Build and Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: northamerica-northeast2
+  SERVICE_NAME: receipt-portal
+  AR_REPO: "gcf-artifacts"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build and Push Container
+        run: |
+          IMAGE_PATH="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/receipt-portal:${{ github.sha }}"
+
+          gcloud builds submit --tag $IMAGE_PATH --async
+
+          echo "FINAL_IMAGE=$IMAGE_PATH" >> $GITHUB_ENV
+
+      - name: Wait for Image
+        run: |
+          echo "Waiting for image in Artifact Registry..."
+          until gcloud artifacts docker images describe ${{ env.FINAL_IMAGE }} > /dev/null 2>&1; do
+            echo "Image not found yet... retrying in 10s"
+            sleep 10
+          done
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.FINAL_IMAGE }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}" \
+            --set-env-vars ACCESS_PASSWORD="${{ secrets.ACCESS_PASSWORD }}" \
+            --set-env-vars ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
+            --set-env-vars SIGNALWIRE_PROJECT_ID="${{ secrets.SIGNALWIRE_PROJECT_ID }}" \
+            --set-env-vars SIGNALWIRE_TOKEN="${{ secrets.SIGNALWIRE_TOKEN }}" \
+            --set-env-vars SIGNALWIRE_SPACE_URL="${{ secrets.SIGNALWIRE_SPACE_URL }}" \
+            --set-env-vars SIGNALWIRE_FROM_NUMBER="${{ secrets.SIGNALWIRE_FROM_NUMBER }}" \
+            --set-env-vars CHARACTER_LIMIT=280 \
+            --quiet \
+            --verbosity=error \
+            --no-user-output-enabled
