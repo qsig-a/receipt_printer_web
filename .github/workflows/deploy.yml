@@ -1,0 +1,46 @@
+name: Build and Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: northamerica-northeast2
+  SERVICE_NAME: receipt-portal
+  IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/receipt-portal
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Authenticate to Google Cloud
+      # Ensure you have added 'GCP_CREDENTIALS' (Service Account JSON) to your GitHub Secrets
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build and Push Container
+        run: |
+          gcloud builds submit --tag ${{ env.IMAGE_NAME }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.IMAGE_NAME }} \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --set-env-vars WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}" \
+            --set-env-vars ACCESS_PASSWORD="${{ secrets.ACCESS_PASSWORD }}" \
+            --set-env-vars ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
+            --set-env-vars CHARACTER_LIMIT=280 > /dev/null
