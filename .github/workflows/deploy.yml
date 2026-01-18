@@ -55,4 +55,6 @@ jobs:
             --set-env-vars ACCESS_PASSWORD="${{ secrets.ACCESS_PASSWORD }}" \
             --set-env-vars ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
             --set-env-vars CHARACTER_LIMIT=280 \
-            --quiet
+            --quiet \
+            --verbosity=error \
+            --no-user-output-enabled
