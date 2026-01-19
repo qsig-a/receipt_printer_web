@@ -212,6 +212,9 @@ def index():
         if user_pw != ACCESS_PASSWORD:
             status = "❌ ACCESS_DENIED: Invalid Keycode"
             log_to_firestore(ip, "DENIED", msg)
+        elif CHARACTER_LIMIT and msg and len(msg) > CHARACTER_LIMIT:
+            status = f"❌ LIMIT_EXCEEDED: Message too long ({len(msg)}/{CHARACTER_LIMIT})"
+            log_to_firestore(ip, "LIMIT_EXCEEDED", msg)
         else:
             try:
                 r = requests.post(WEBHOOK_URL, json={"message": msg}, timeout=10)
@@ -278,6 +281,10 @@ def sms_webhook():
     pending_doc = pending_ref.get()
 
     if not pending_doc.exists:
+        if CHARACTER_LIMIT and len(body) > CHARACTER_LIMIT:
+            send_sms(from_number, f"❌ Message too long. Limit is {CHARACTER_LIMIT} characters.")
+            return "OK"
+
         # New message -> Store it and ask for password
         pending_ref.set({
             'message': body,
