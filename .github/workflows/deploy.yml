@@ -48,10 +48,10 @@ jobs:
           done
 
           if [ "$CODE_FILES_CHANGED" = "true" ]; then
-            echo "::set-output name=should_build_image::true"
+            echo "should_build_image=true" >> $GITHUB_OUTPUT
             echo "Detected changes in code files (dockerfile, app.py, or requirements.txt), image build is required."
           else
-            echo "::set-output name=should_build_image::false"
+            echo "should_build_image=false" >> $GITHUB_OUTPUT
             echo "No changes detected in code files, skipping image build."
           fi
 
@@ -62,7 +62,7 @@ jobs:
           IMAGE_PATH="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/receipt-portal:${{ github.sha }}"
           gcloud builds submit --tag $IMAGE_PATH --async
           echo "FINAL_IMAGE=$IMAGE_PATH" >> $GITHUB_ENV
-          echo "::set-output name=image_tag::$IMAGE_PATH" # Output the new image tag
+          echo "image_tag=$IMAGE_PATH" >> $GITHUB_OUTPUT # Output the new image tag
 
       - name: Wait for Image
         if: steps.check_for_code_changes.outputs.should_build_image == 'true'
@@ -80,8 +80,13 @@ jobs:
           CURRENT_IMAGE=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
             --region ${{ env.REGION }} \
             --format="value(status.latestReadyRevision.image)")
+          
+          if [ -z "$CURRENT_IMAGE" ]; then
+            echo "Error: Could not fetch current image tag. The service might not exist or has no ready revisions."
+            exit 1
+          fi
           echo "Current deployed image: $CURRENT_IMAGE"
-          echo "::set-output name=image_tag::$CURRENT_IMAGE" # Output the current image tag
+          echo "image_tag=$CURRENT_IMAGE" >> $GITHUB_OUTPUT # Output the current image tag
 
       - name: Deploy to Cloud Run
         run: |
