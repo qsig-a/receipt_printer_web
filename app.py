@@ -47,7 +47,7 @@ body {
     background: var(--card-bg); backdrop-filter: blur(10px);
     padding: 2.5rem; border-radius: 20px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    width: 100%; max-width: 500px; text-align: center;
+    width: 100%; max-width: 600px; text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.5);
 }
 input, textarea {
@@ -55,7 +55,7 @@ input, textarea {
     border-radius: 12px; font-size: 1rem; margin-top: 0.5rem;
     box-sizing: border-box; background: white; font-family: inherit;
 }
-textarea { resize: vertical; min-height: 120px; }
+textarea { resize: vertical; min-height: 120px; font-family: monospace; width: 48ch; max-width: 100%; box-sizing: content-box; margin-left: auto; margin-right: auto; display: block; }
 .btn {
     width: 100%; padding: 0.75rem; color: white; border: none; 
     border-radius: 12px; font-weight: 600; cursor: pointer; 
