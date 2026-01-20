@@ -79,7 +79,7 @@ jobs:
         run: |
           CURRENT_IMAGE=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
             --region ${{ env.REGION }} \
-            --format="value(status.latestReadyRevision.image)")
+            --format="value(spec.template.spec.containers[0].image)"
           
           if [ -z "$CURRENT_IMAGE" ]; then
             echo "Error: Could not fetch current image tag. The service might not exist or has no ready revisions."
