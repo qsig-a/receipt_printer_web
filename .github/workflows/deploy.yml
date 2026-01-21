@@ -106,6 +106,9 @@ jobs:
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated \
+            --min-instances 1 \
+            --memory 256Mi \
+            --cpu 0.25 \
             --set-env-vars WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}" \
             --set-env-vars ACCESS_PASSWORD="${{ secrets.ACCESS_PASSWORD }}" \
             --set-env-vars ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
