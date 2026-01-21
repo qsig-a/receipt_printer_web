@@ -3,7 +3,7 @@ import requests
 import os
 import io
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from google.cloud import firestore
 from signalwire.rest import Client as signalwire_client
 
@@ -21,6 +21,10 @@ SIGNALWIRE_TOKEN = os.environ.get('SIGNALWIRE_TOKEN')
 SIGNALWIRE_SPACE_URL = os.environ.get('SIGNALWIRE_SPACE_URL')
 SIGNALWIRE_FROM_NUMBER = os.environ.get('SIGNALWIRE_FROM_NUMBER')
 
+# Slack Configuration
+SLACK_MESSAGE_LIMIT = int(os.environ.get('SLACK_MESSAGE_LIMIT', 5))
+SLACK_LIMIT_PERIOD = int(os.environ.get('SLACK_LIMIT_PERIOD', 1)) # minutes
+
 # Convert the string env variable to an integer if it exists
 char_limit_raw = os.environ.get('CHARACTER_LIMIT')
 CHARACTER_LIMIT = int(char_limit_raw) if char_limit_raw and char_limit_raw.isdigit() else None
@@ -30,6 +34,7 @@ CHARACTER_LIMIT = int(char_limit_raw) if char_limit_raw and char_limit_raw.isdig
 db = firestore.Client(database="receipt-printer")
 COLLECTION_NAME = "print_history"
 SMS_PENDING_COLLECTION = "sms_pending"
+SLACK_RATELIMITS_COLLECTION = "slack_ratelimits"
 
 # --- UI Templates (Unchanged) ---
 SHARED_CSS = """
@@ -199,6 +204,63 @@ def get_logs_from_firestore():
         })
     return logs
 
+def check_slack_rate_limit(user_id):
+    """Checks if a Slack user is rate limited."""
+    doc_ref = db.collection(SLACK_RATELIMITS_COLLECTION).document(user_id)
+    doc = doc_ref.get()
+
+    # Use timezone aware now
+    now = datetime.now(timezone.utc)
+
+    if not doc.exists:
+        doc_ref.set({
+            'timestamps': [now],
+            'blocked_until': None
+        })
+        return True, None
+
+    data = doc.to_dict()
+    blocked_until = data.get('blocked_until')
+
+    if blocked_until:
+        # Ensure blocked_until is timezone aware
+        if blocked_until.tzinfo is None:
+             blocked_until = blocked_until.replace(tzinfo=timezone.utc)
+
+        if blocked_until > now:
+            remaining = (blocked_until - now).total_seconds() / 60
+            return False, f"You are temporarily blocked for {int(remaining)+1} more minutes."
+        else:
+            blocked_until = None
+
+    timestamps = data.get('timestamps', [])
+    # Filter timestamps
+    cutoff = now - timedelta(minutes=SLACK_LIMIT_PERIOD)
+
+    recent_timestamps = []
+    for t in timestamps:
+        # Ensure timestamp is timezone aware
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=timezone.utc)
+        if t > cutoff:
+            recent_timestamps.append(t)
+
+    if len(recent_timestamps) >= SLACK_MESSAGE_LIMIT:
+        block_duration = timedelta(minutes=SLACK_LIMIT_PERIOD)
+        new_blocked_until = now + block_duration
+        doc_ref.set({
+            'timestamps': recent_timestamps,
+            'blocked_until': new_blocked_until
+        })
+        return False, f"Rate limit exceeded. You are blocked for {SLACK_LIMIT_PERIOD} minutes."
+
+    recent_timestamps.append(now)
+    doc_ref.set({
+        'timestamps': recent_timestamps,
+        'blocked_until': None
+    })
+    return True, None
+
 # --- Routes ---
 
 @app.route('/', methods=['GET', 'POST'])
@@ -326,6 +388,55 @@ def sms_webhook():
             pending_ref.delete()
 
     return "OK"
+
+@app.route('/slack', methods=['POST'])
+def slack_webhook():
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    # URL Verification for Slack Event Subscription
+    if data.get('type') == 'url_verification':
+        return {"challenge": data.get('challenge')}
+
+    user_id = None
+    user_name = None
+    text = None
+
+    # Check for Event API structure
+    if 'event' in data:
+        event = data['event']
+        if event.get('type') == 'message' and not event.get('bot_id'):
+            user_id = event.get('user')
+            text = event.get('text')
+            user_name = user_id
+    # Check for Slash Command structure
+    else:
+        user_id = data.get('user_id')
+        user_name = data.get('user_name')
+        text = data.get('text')
+
+    if not user_id or not text:
+        return "Ignored", 200
+
+    allowed, message = check_slack_rate_limit(user_id)
+    if not allowed:
+        return {"response_type": "ephemeral", "text": f"❌ {message}"}
+
+    source = f"Slack: {user_name or user_id}"
+
+    try:
+        r = requests.post(WEBHOOK_URL, json={"message": text}, timeout=10)
+        if r.status_code == 200:
+            log_to_firestore(source, "SUCCESS", text)
+            return {"response_type": "ephemeral", "text": "✅ Message sent to printer!"}
+        else:
+            log_to_firestore(source, f"HA_ERR_{r.status_code}", text)
+            return {"response_type": "ephemeral", "text": f"❌ Error: {r.status_code}"}
+    except Exception as e:
+        log_to_firestore(source, "CONN_FAIL", str(e))
+        return {"response_type": "ephemeral", "text": "❌ Connection failed"}
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
