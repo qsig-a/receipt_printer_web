@@ -114,6 +114,8 @@ jobs:
             --set-env-vars SIGNALWIRE_SPACE_URL="${{ secrets.SIGNALWIRE_SPACE_URL }}" \
             --set-env-vars SIGNALWIRE_FROM_NUMBER="${{ secrets.SIGNALWIRE_FROM_NUMBER }}" \
             --set-env-vars CHARACTER_LIMIT=1000 \
+            --set-env-vars SLACK_MESSAGE_LIMIT=5 \
+            --set-env-vars SLACK_LIMIT_PERIOD=1 \
             --quiet \
             --verbosity=error \
             --no-user-output-enabled
