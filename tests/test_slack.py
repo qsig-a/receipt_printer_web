@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch, ANY
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 
 # Mock google.cloud.firestore before importing app
@@ -49,29 +49,32 @@ class TestSlack(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"challenge": "3eZbrw1aBm2rZgRNFdxV2595E9CY3gmdALWMmHkvFXO7tYXAYM8P"})
 
+    @patch('app.process_slack_async')
     @patch('app.requests.post')
-    def test_slack_slash_command_success(self, mock_requests_post):
+    def test_slack_slash_command_success(self, mock_requests_post, mock_process_async):
         """Test a valid Slash Command message that is under the rate limit."""
         # Mock Firestore: User not blocked, no previous messages
         mock_doc_ref = MagicMock()
         mock_doc_ref.get.return_value.exists = False # New user/no history
         db.collection.return_value.document.return_value = mock_doc_ref
 
-        mock_requests_post.return_value.status_code = 200
-
         data = {
             'user_id': 'U12345',
             'user_name': 'testuser',
             'text': 'Hello Printer',
-            'command': '/print'
+            'command': '/print',
+            'response_url': 'https://hooks.slack.com/commands/T123/456/789'
         }
         response = self.client.post('/slack', data=data)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Message sent to printer", response.data)
+        # Expect the immediate "Sending..." message (Async behavior)
+        self.assertIn(b"Sending to printer", response.data)
 
-        # Check webhook call
-        mock_requests_post.assert_called_with('http://fake-printer', json={'message': 'Hello Printer'}, timeout=10)
+        # Ensure the background task was started
+        mock_process_async.assert_called_once()
+        # Ensure the synchronous webhook was NOT called in the main thread
+        mock_requests_post.assert_not_called()
 
         # Check Firestore update (timestamps updated)
         # Should set timestamps with one entry (now)
@@ -151,6 +154,83 @@ class TestSlack(unittest.TestCase):
         self.assertIn(b"blocked", response.data.lower())
 
         mock_requests_post.assert_not_called()
+
+    @patch('app.process_slack_async')
+    def test_slack_rate_limit_expired(self, mock_process_async):
+        """Test that a user is unblocked after the time expires."""
+        now = datetime.now(timezone.utc)
+        past = now - timedelta(minutes=10)
+
+        mock_doc_ref = MagicMock()
+        mock_doc_ref.get.return_value.exists = True
+        mock_doc_ref.get.return_value.to_dict.return_value = {
+            'timestamps': [],
+            'blocked_until': past
+        }
+        db.collection.return_value.document.return_value = mock_doc_ref
+
+        data = {
+            'user_id': 'UEXPIRED',
+            'user_name': 'expireduser',
+            'text': 'I am back',
+            'command': '/print',
+            'response_url': 'http://resp'
+        }
+        response = self.client.post('/slack', data=data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Sending to printer", response.data)
+        mock_process_async.assert_called_once()
+
+    @patch('app.requests.post')
+    def test_process_slack_async_success(self, mock_post):
+        """Test the async background worker function directly for success."""
+        from app import process_slack_async
+        
+        mock_post.return_value.status_code = 200
+        
+        process_slack_async('http://response-url', 'http://webhook', 'message', 'Source')
+        
+        # Check webhook call
+        mock_post.assert_any_call('http://webhook', json={'message': 'message'}, timeout=10)
+        # Check response call
+        mock_post.assert_any_call('http://response-url', json={"text": "✅ Message sent to printer!", "response_type": "ephemeral"})
+
+    @patch('app.requests.post')
+    def test_process_slack_async_failure(self, mock_post):
+        """Test the async background worker function for webhook failure."""
+        from app import process_slack_async
+        
+        # Webhook returns 500, Slack response returns 200
+        mock_post.side_effect = [
+            MagicMock(status_code=500),
+            MagicMock(status_code=200)
+        ]
+        
+        process_slack_async('http://response-url', 'http://webhook', 'message', 'Source')
+        
+        # Verify Slack response indicates error
+        # We look at the second call to post
+        self.assertEqual(mock_post.call_count, 2)
+        args, kwargs = mock_post.call_args_list[1]
+        self.assertIn("❌ Error: 500", kwargs['json']['text'])
+
+    @patch('app.requests.post')
+    def test_process_slack_async_exception(self, mock_post):
+        """Test the async background worker function for connection exception."""
+        from app import process_slack_async
+        
+        # Webhook raises exception
+        mock_post.side_effect = [
+            Exception("Connection failed"),
+            MagicMock(status_code=200)
+        ]
+        
+        process_slack_async('http://response-url', 'http://webhook', 'message', 'Source')
+        
+        self.assertEqual(mock_post.call_count, 2)
+        args, kwargs = mock_post.call_args_list[1]
+        self.assertIn("❌ Connection failed", kwargs['json']['text'])
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,6 +2,7 @@ from flask import Flask, render_template_string, request, redirect, url_for, Res
 import requests
 import os
 import io
+import threading
 import csv
 from datetime import datetime, timedelta, timezone
 from google.cloud import firestore
@@ -264,6 +265,25 @@ def check_slack_rate_limit(user_id):
     })
     return True, None
 
+def process_slack_async(response_url, webhook_url, text, source):
+    """Async handler for Slack commands to prevent timeouts."""
+    try:
+        r = requests.post(webhook_url, json={"message": text}, timeout=10)
+        if r.status_code == 200:
+            log_to_firestore(source, "SUCCESS", text)
+            msg = "✅ Message sent to printer!"
+        else:
+            log_to_firestore(source, f"HA_ERR_{r.status_code}", text)
+            msg = f"❌ Error: {r.status_code}"
+    except Exception as e:
+        log_to_firestore(source, "CONN_FAIL", str(e))
+        msg = "❌ Connection failed"
+
+    try:
+        requests.post(response_url, json={"text": msg, "response_type": "ephemeral"})
+    except Exception as e:
+        print(f"Failed to send delayed Slack response: {e}")
+
 # --- Routes ---
 
 @app.route('/', methods=['GET', 'POST'])
@@ -428,6 +448,11 @@ def slack_webhook():
         return {"response_type": "ephemeral", "text": f"❌ {message}"}
 
     source = f"Slack: {user_name or user_id}"
+
+    response_url = data.get('response_url')
+    if response_url:
+        threading.Thread(target=process_slack_async, args=(response_url, WEBHOOK_URL, text, source)).start()
+        return {"response_type": "ephemeral", "text": "⏳ Sending to printer..."}
 
     try:
         r = requests.post(WEBHOOK_URL, json={"message": text}, timeout=10)
