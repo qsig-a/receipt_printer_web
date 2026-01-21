@@ -109,6 +109,7 @@ jobs:
             --min-instances 1 \
             --memory 256Mi \
             --cpu 0.25 \
+            --concurrency 1 \
             --set-env-vars WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}" \
             --set-env-vars ACCESS_PASSWORD="${{ secrets.ACCESS_PASSWORD }}" \
             --set-env-vars ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}" \
@@ -119,7 +120,6 @@ jobs:
             --set-env-vars CHARACTER_LIMIT=1000 \
             --set-env-vars SLACK_MESSAGE_LIMIT=5 \
             --set-env-vars SLACK_LIMIT_PERIOD=1 \
-            --set-env-vars LOG_HISTORY_LIMIT=50 \
             --quiet \
             --verbosity=error \
             --no-user-output-enabled

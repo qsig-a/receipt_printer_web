@@ -11,11 +11,6 @@ sys.modules['google.cloud.firestore'] = MagicMock()
 sys.modules['signalwire'] = MagicMock()
 sys.modules['signalwire.rest'] = MagicMock()
 
-# Set env vars for Slack Rate Limiting
-os.environ['SLACK_MESSAGE_LIMIT'] = '2'
-os.environ['SLACK_LIMIT_PERIOD'] = '1' # 1 minute
-os.environ['WEBHOOK_URL'] = 'http://fake-printer'
-
 from app import app, db
 
 class TestSlack(unittest.TestCase):
@@ -27,9 +22,9 @@ class TestSlack(unittest.TestCase):
 
         # Patch app configuration globals
         self.patchers = [
-            patch('app.WEBHOOK_URL', 'http://fake-printer'),
             patch('app.SLACK_MESSAGE_LIMIT', 2),
-            patch('app.SLACK_LIMIT_PERIOD', 1)
+            patch('app.SLACK_LIMIT_PERIOD', 1),
+            patch('app.WEBHOOK_URL', 'http://fake-printer')
         ]
         for p in self.patchers:
             p.start()
@@ -49,32 +44,29 @@ class TestSlack(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"challenge": "3eZbrw1aBm2rZgRNFdxV2595E9CY3gmdALWMmHkvFXO7tYXAYM8P"})
 
-    @patch('app.process_slack_async')
     @patch('app.requests.post')
-    def test_slack_slash_command_success(self, mock_requests_post, mock_process_async):
+    def test_slack_slash_command_success(self, mock_requests_post):
         """Test a valid Slash Command message that is under the rate limit."""
         # Mock Firestore: User not blocked, no previous messages
         mock_doc_ref = MagicMock()
         mock_doc_ref.get.return_value.exists = False # New user/no history
         db.collection.return_value.document.return_value = mock_doc_ref
 
+        mock_requests_post.return_value.status_code = 200
+
         data = {
             'user_id': 'U12345',
             'user_name': 'testuser',
             'text': 'Hello Printer',
-            'command': '/print',
-            'response_url': 'https://hooks.slack.com/commands/T123/456/789'
+            'command': '/print'
         }
         response = self.client.post('/slack', data=data)
 
         self.assertEqual(response.status_code, 200)
-        # Expect the immediate "Sending..." message (Async behavior)
-        self.assertIn(b"Sending to printer", response.data)
+        self.assertIn(b"Message sent to printer", response.data)
 
-        # Ensure the background task was started
-        mock_process_async.assert_called_once()
-        # Ensure the synchronous webhook was NOT called in the main thread
-        mock_requests_post.assert_not_called()
+        # Check webhook call
+        mock_requests_post.assert_called_with('http://fake-printer', json={'message': 'Hello Printer'}, timeout=10)
 
         # Check Firestore update (timestamps updated)
         # Should set timestamps with one entry (now)
@@ -95,7 +87,7 @@ class TestSlack(unittest.TestCase):
         # Limit is 2 per 1 minute.
         # User has sent 2 messages recently.
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         past = now - timedelta(seconds=10)
 
         mock_doc_ref = MagicMock()
@@ -131,7 +123,7 @@ class TestSlack(unittest.TestCase):
     @patch('app.requests.post')
     def test_slack_currently_blocked(self, mock_requests_post):
         """Test that a blocked user is rejected immediately."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         future = now + timedelta(minutes=5)
 
         mock_doc_ref = MagicMock()
