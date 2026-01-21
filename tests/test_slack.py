@@ -25,6 +25,19 @@ class TestSlack(unittest.TestCase):
         db.collection.return_value.document.return_value.get.return_value.exists = False
         db.collection.return_value.document.return_value.get.return_value.to_dict.return_value = {}
 
+        # Patch app configuration globals
+        self.patchers = [
+            patch('app.WEBHOOK_URL', 'http://fake-printer'),
+            patch('app.SLACK_MESSAGE_LIMIT', 2),
+            patch('app.SLACK_LIMIT_PERIOD', 1)
+        ]
+        for p in self.patchers:
+            p.start()
+
+    def tearDown(self):
+        for p in self.patchers:
+            p.stop()
+
     def test_url_verification(self):
         """Test Slack URL verification challenge."""
         data = {

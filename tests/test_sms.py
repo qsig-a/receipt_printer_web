@@ -27,6 +27,22 @@ class TestSMS(unittest.TestCase):
         db.collection.return_value.document.return_value.get.return_value.exists = False
         db.collection.return_value.document.return_value.get.return_value.to_dict.return_value = {}
 
+        # Patch app configuration globals
+        self.patchers = [
+            patch('app.SIGNALWIRE_PROJECT_ID', 'fake_pid'),
+            patch('app.SIGNALWIRE_TOKEN', 'fake_token'),
+            patch('app.SIGNALWIRE_SPACE_URL', 'fake_url'),
+            patch('app.SIGNALWIRE_FROM_NUMBER', 'fake_from'),
+            patch('app.ACCESS_PASSWORD', 'secret'),
+            patch('app.WEBHOOK_URL', 'http://fake-printer')
+        ]
+        for p in self.patchers:
+            p.start()
+
+    def tearDown(self):
+        for p in self.patchers:
+            p.stop()
+
     @patch('app.requests.post')
     @patch('app.signalwire_client')
     def test_sms_new_message(self, mock_sw_client, mock_requests_post):
