@@ -25,19 +25,6 @@ class TestSlack(unittest.TestCase):
         db.collection.return_value.document.return_value.get.return_value.exists = False
         db.collection.return_value.document.return_value.get.return_value.to_dict.return_value = {}
 
-        # Patch app configuration globals
-        self.patchers = [
-            patch('app.WEBHOOK_URL', 'http://fake-printer'),
-            patch('app.SLACK_MESSAGE_LIMIT', 2),
-            patch('app.SLACK_LIMIT_PERIOD', 1)
-        ]
-        for p in self.patchers:
-            p.start()
-
-    def tearDown(self):
-        for p in self.patchers:
-            p.stop()
-
     def test_url_verification(self):
         """Test Slack URL verification challenge."""
         data = {
@@ -49,32 +36,29 @@ class TestSlack(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"challenge": "3eZbrw1aBm2rZgRNFdxV2595E9CY3gmdALWMmHkvFXO7tYXAYM8P"})
 
-    @patch('app.process_slack_async')
     @patch('app.requests.post')
-    def test_slack_slash_command_success(self, mock_requests_post, mock_process_async):
+    def test_slack_slash_command_success(self, mock_requests_post):
         """Test a valid Slash Command message that is under the rate limit."""
         # Mock Firestore: User not blocked, no previous messages
         mock_doc_ref = MagicMock()
         mock_doc_ref.get.return_value.exists = False # New user/no history
         db.collection.return_value.document.return_value = mock_doc_ref
 
+        mock_requests_post.return_value.status_code = 200
+
         data = {
             'user_id': 'U12345',
             'user_name': 'testuser',
             'text': 'Hello Printer',
-            'command': '/print',
-            'response_url': 'https://hooks.slack.com/commands/T123/456/789'
+            'command': '/print'
         }
         response = self.client.post('/slack', data=data)
 
         self.assertEqual(response.status_code, 200)
-        # Expect the immediate "Sending..." message (Async behavior)
-        self.assertIn(b"Sending to printer", response.data)
+        self.assertIn(b"Message sent to printer", response.data)
 
-        # Ensure the background task was started
-        mock_process_async.assert_called_once()
-        # Ensure the synchronous webhook was NOT called in the main thread
-        mock_requests_post.assert_not_called()
+        # Check webhook call
+        mock_requests_post.assert_called_with('http://fake-printer', json={'message': 'Hello Printer'}, timeout=10)
 
         # Check Firestore update (timestamps updated)
         # Should set timestamps with one entry (now)
