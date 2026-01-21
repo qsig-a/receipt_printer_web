@@ -25,6 +25,9 @@ SIGNALWIRE_FROM_NUMBER = os.environ.get('SIGNALWIRE_FROM_NUMBER')
 SLACK_MESSAGE_LIMIT = int(os.environ.get('SLACK_MESSAGE_LIMIT', 5))
 SLACK_LIMIT_PERIOD = int(os.environ.get('SLACK_LIMIT_PERIOD', 1)) # minutes
 
+# Log History Limit
+LOG_HISTORY_LIMIT = int(os.environ.get('LOG_HISTORY_LIMIT', 50))
+
 # Convert the string env variable to an integer if it exists
 char_limit_raw = os.environ.get('CHARACTER_LIMIT')
 CHARACTER_LIMIT = int(char_limit_raw) if char_limit_raw and char_limit_raw.isdigit() else None
@@ -188,7 +191,7 @@ def log_to_firestore(source, status, message):
 def get_logs_from_firestore():
     """Fetches and formats logs from Firestore, newest first."""
     logs = []
-    docs = db.collection(COLLECTION_NAME).order_by('timestamp', direction=firestore.Query.DESCENDING).stream()
+    docs = db.collection(COLLECTION_NAME).order_by('timestamp', direction=firestore.Query.DESCENDING).limit(LOG_HISTORY_LIMIT).stream()
     for doc in docs:
         data = doc.to_dict()
         # Handle cases where SERVER_TIMESTAMP hasn't resolved yet
