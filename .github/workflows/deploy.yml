@@ -89,6 +89,8 @@ jobs:
           echo "image_tag=$CURRENT_IMAGE" >> $GITHUB_OUTPUT # Output the current image tag
 
       - name: Deploy to Cloud Run
+        env:
+          SMS_WHITELIST_SECRET: ${{ secrets.SMS_WHITELIST }}
         run: |
           # Determine which image to use for deployment
           # Use the image tag from the build step if it ran, otherwise use the retrieved current image tag.
@@ -100,6 +102,9 @@ jobs:
           fi
 
           echo "Deploying service ${{ env.SERVICE_NAME }} with image: $DEPLOY_IMAGE"
+
+          # Escape commas in the whitelist to prevent gcloud from splitting the value
+          SMS_WHITELIST_ESCAPED="${SMS_WHITELIST_SECRET//,/\\,}"
 
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image "$DEPLOY_IMAGE" \
@@ -117,7 +122,7 @@ jobs:
             --set-env-vars SIGNALWIRE_TOKEN="${{ secrets.SIGNALWIRE_TOKEN }}" \
             --set-env-vars SIGNALWIRE_SPACE_URL="${{ secrets.SIGNALWIRE_SPACE_URL }}" \
             --set-env-vars SIGNALWIRE_FROM_NUMBER="${{ secrets.SIGNALWIRE_FROM_NUMBER }}" \
-            --set-env-vars SMS_WHITELIST="${{ secrets.SMS_WHITELIST }}" \
+            --set-env-vars SMS_WHITELIST="$SMS_WHITELIST_ESCAPED" \
             --set-env-vars CHARACTER_LIMIT=1000 \
             --set-env-vars SLACK_MESSAGE_LIMIT=5 \
             --set-env-vars SLACK_LIMIT_PERIOD=1 \
