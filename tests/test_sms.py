@@ -23,9 +23,19 @@ from app import app, db
 class TestSMS(unittest.TestCase):
     def setUp(self):
         self.client = app.test_client()
+
         # Reset mocks
-        db.collection.return_value.document.return_value.get.return_value.exists = False
-        db.collection.return_value.document.return_value.get.return_value.to_dict.return_value = {}
+        db.reset_mock()
+
+        # Default behavior: Whitelist check finds nothing
+        # db.collection(...).where(...).limit(1).stream() -> []
+        db.collection.return_value.where.return_value.limit.return_value.stream.return_value = []
+
+        # Default behavior: Document pending check finds nothing
+        self.mock_doc_ref = MagicMock()
+        self.mock_doc_ref.get.return_value.exists = False
+        self.mock_doc_ref.get.return_value.to_dict.return_value = {}
+        db.collection.return_value.document.return_value = self.mock_doc_ref
 
         # Patch app configuration globals
         self.patchers = [
@@ -49,11 +59,6 @@ class TestSMS(unittest.TestCase):
         # Scenario: User sends a new message "Hello"
         # Expectation: Stores "Hello" in Firestore and replies "Please reply with password"
 
-        # Mock Firestore: Document does not exist (new message)
-        mock_doc_ref = MagicMock()
-        mock_doc_ref.get.return_value.exists = False
-        db.collection.return_value.document.return_value = mock_doc_ref
-
         response = self.client.post('/sms', data={'From': '+1234567890', 'Body': 'Hello'})
 
         self.assertEqual(response.status_code, 200)
@@ -61,7 +66,7 @@ class TestSMS(unittest.TestCase):
 
         # Check if saved to pending
         db.collection.assert_any_call("sms_pending")
-        mock_doc_ref.set.assert_called_with({
+        self.mock_doc_ref.set.assert_called_with({
             'message': 'Hello',
             'timestamp': ANY # We can't predict timestamp object easily
         })
@@ -80,10 +85,8 @@ class TestSMS(unittest.TestCase):
         # Expectation: Prints original message, Logs success, Clears pending, Replies "Printed"
 
         # Mock Firestore: Document exists (pending message "Hello")
-        mock_doc_ref = MagicMock()
-        mock_doc_ref.get.return_value.exists = True
-        mock_doc_ref.get.return_value.to_dict.return_value = {'message': 'Hello'}
-        db.collection.return_value.document.return_value = mock_doc_ref
+        self.mock_doc_ref.get.return_value.exists = True
+        self.mock_doc_ref.get.return_value.to_dict.return_value = {'message': 'Hello'}
 
         # Mock Printer Webhook success
         mock_requests_post.return_value.status_code = 200
@@ -95,13 +98,8 @@ class TestSMS(unittest.TestCase):
         # Check if printed
         mock_requests_post.assert_called_with(ANY, json={'message': 'Hello'}, timeout=10)
 
-        # Check if logged to history
-        # We need to distinguish between pending collection and history collection calls
-        # This is a bit tricky with the mock setup, but we can check if set was called with success status
-        # A clearer way is to inspect the calls to set()
-
         # Check if pending deleted
-        mock_doc_ref.delete.assert_called()
+        self.mock_doc_ref.delete.assert_called()
 
         # Check if success SMS sent
         mock_sw_client.return_value.messages.create.assert_called_with(
@@ -117,10 +115,8 @@ class TestSMS(unittest.TestCase):
         # Expectation: Logs DENIED, Replies "Invalid password", Clears pending (as per design)
 
         # Mock Firestore: Document exists
-        mock_doc_ref = MagicMock()
-        mock_doc_ref.get.return_value.exists = True
-        mock_doc_ref.get.return_value.to_dict.return_value = {'message': 'Hello'}
-        db.collection.return_value.document.return_value = mock_doc_ref
+        self.mock_doc_ref.get.return_value.exists = True
+        self.mock_doc_ref.get.return_value.to_dict.return_value = {'message': 'Hello'}
 
         response = self.client.post('/sms', data={'From': '+1234567890', 'Body': 'wrongpass'})
 
@@ -137,7 +133,7 @@ class TestSMS(unittest.TestCase):
         )
 
         # Check if pending deleted
-        mock_doc_ref.delete.assert_called()
+        self.mock_doc_ref.delete.assert_called()
 
     @patch('app.requests.post')
     @patch('app.signalwire_client')
@@ -145,24 +141,22 @@ class TestSMS(unittest.TestCase):
         # Scenario: User sends a message from a whitelisted number
         # Expectation: Prints directly without asking for password
 
-        # Patch the whitelist list directly on the app module
-        with patch('app.SMS_WHITELIST_NUMBERS', ['+1999999999']):
-            # Mock Printer Webhook success
-            mock_requests_post.return_value.status_code = 200
+        # Mock Whitelist check finding a match
+        db.collection.return_value.where.return_value.limit.return_value.stream.return_value = [MagicMock()]
 
-            response = self.client.post('/sms', data={'From': '+1999999999', 'Body': 'Direct Print'})
+        # Mock Printer Webhook success
+        mock_requests_post.return_value.status_code = 200
 
-            self.assertEqual(response.status_code, 200)
+        response = self.client.post('/sms', data={'From': '+1999999999', 'Body': 'Direct Print'})
 
-            # Check if printed
-            mock_requests_post.assert_called_with(ANY, json={'message': 'Direct Print'}, timeout=10)
+        self.assertEqual(response.status_code, 200)
 
-            # Check if success SMS sent
-            mock_sw_client.return_value.messages.create.assert_called_with(
-                from_='fake_from',
-                to='+1999999999',
-                body="✅ Message printed successfully!"
-            )
+        # Check if printed
+        mock_requests_post.assert_called_with(ANY, json={'message': 'Direct Print'}, timeout=10)
 
-if __name__ == '__main__':
-    unittest.main()
+        # Check if success SMS sent
+        mock_sw_client.return_value.messages.create.assert_called_with(
+            from_='fake_from',
+            to='+1999999999',
+            body="✅ Message printed successfully!"
+        )

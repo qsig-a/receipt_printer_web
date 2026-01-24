@@ -30,8 +30,7 @@ SLACK_LIMIT_PERIOD = int(os.environ.get('SLACK_LIMIT_PERIOD', 1)) # minutes
 LOG_HISTORY_LIMIT = int(os.environ.get('LOG_HISTORY_LIMIT', 50))
 
 # SMS Whitelist
-SMS_WHITELIST = os.environ.get('SMS_WHITELIST', '')
-SMS_WHITELIST_NUMBERS = [n.strip() for n in SMS_WHITELIST.split(',') if n.strip()]
+SMS_WHITELIST_COLLECTION = "sms_whitelist"
 
 # Convert the string env variable to an integer if it exists
 char_limit_raw = os.environ.get('CHARACTER_LIMIT')
@@ -366,7 +365,16 @@ def sms_webhook():
         return "Missing From number", 400
 
     # Check whitelist
-    if from_number in SMS_WHITELIST_NUMBERS:
+    is_whitelisted = False
+    try:
+        docs = db.collection(SMS_WHITELIST_COLLECTION).where('number', '==', from_number).limit(1).stream()
+        for _ in docs:
+            is_whitelisted = True
+            break
+    except Exception as e:
+        print(f"Error checking whitelist: {e}")
+
+    if is_whitelisted:
         if CHARACTER_LIMIT and len(body) > CHARACTER_LIMIT:
             send_sms(from_number, f"❌ Message too long. Limit is {CHARACTER_LIMIT} characters.")
             return "OK"
