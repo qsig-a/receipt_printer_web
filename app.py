@@ -29,6 +29,10 @@ SLACK_LIMIT_PERIOD = int(os.environ.get('SLACK_LIMIT_PERIOD', 1)) # minutes
 # Log History Limit
 LOG_HISTORY_LIMIT = int(os.environ.get('LOG_HISTORY_LIMIT', 50))
 
+# SMS Whitelist
+SMS_WHITELIST = os.environ.get('SMS_WHITELIST', '')
+SMS_WHITELIST_NUMBERS = [n.strip() for n in SMS_WHITELIST.split(',') if n.strip()]
+
 # Convert the string env variable to an integer if it exists
 char_limit_raw = os.environ.get('CHARACTER_LIMIT')
 CHARACTER_LIMIT = int(char_limit_raw) if char_limit_raw and char_limit_raw.isdigit() else None
@@ -360,6 +364,25 @@ def sms_webhook():
 
     if not from_number:
         return "Missing From number", 400
+
+    # Check whitelist
+    if from_number in SMS_WHITELIST_NUMBERS:
+        if CHARACTER_LIMIT and len(body) > CHARACTER_LIMIT:
+            send_sms(from_number, f"❌ Message too long. Limit is {CHARACTER_LIMIT} characters.")
+            return "OK"
+
+        try:
+            r = requests.post(WEBHOOK_URL, json={"message": body}, timeout=10)
+            if r.status_code == 200:
+                log_to_firestore(from_number, "SUCCESS", body)
+                send_sms(from_number, "✅ Message printed successfully!")
+            else:
+                log_to_firestore(from_number, f"HA_ERR_{r.status_code}", body)
+                send_sms(from_number, f"❌ Error printing message. HA replied: {r.status_code}")
+        except Exception as e:
+            log_to_firestore(from_number, "CONN_FAIL", f"{body} (Error: {str(e)})")
+            send_sms(from_number, "❌ Connection error while printing.")
+        return "OK"
 
     # Check if there is a pending message for this number
     pending_ref = db.collection(SMS_PENDING_COLLECTION).document(from_number)

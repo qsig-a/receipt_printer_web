@@ -139,5 +139,30 @@ class TestSMS(unittest.TestCase):
         # Check if pending deleted
         mock_doc_ref.delete.assert_called()
 
+    @patch('app.requests.post')
+    @patch('app.signalwire_client')
+    def test_sms_whitelist(self, mock_sw_client, mock_requests_post):
+        # Scenario: User sends a message from a whitelisted number
+        # Expectation: Prints directly without asking for password
+
+        # Patch the whitelist list directly on the app module
+        with patch('app.SMS_WHITELIST_NUMBERS', ['+1999999999']):
+            # Mock Printer Webhook success
+            mock_requests_post.return_value.status_code = 200
+
+            response = self.client.post('/sms', data={'From': '+1999999999', 'Body': 'Direct Print'})
+
+            self.assertEqual(response.status_code, 200)
+
+            # Check if printed
+            mock_requests_post.assert_called_with(ANY, json={'message': 'Direct Print'}, timeout=10)
+
+            # Check if success SMS sent
+            mock_sw_client.return_value.messages.create.assert_called_with(
+                from_='fake_from',
+                to='+1999999999',
+                body="✅ Message printed successfully!"
+            )
+
 if __name__ == '__main__':
     unittest.main()
