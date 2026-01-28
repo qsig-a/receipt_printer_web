@@ -44,33 +44,35 @@ class TestSlack(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {"challenge": "3eZbrw1aBm2rZgRNFdxV2595E9CY3gmdALWMmHkvFXO7tYXAYM8P"})
 
-    @patch('app.requests.post')
-    def test_slack_slash_command_success(self, mock_requests_post):
+    @patch('app.process_slack_async')
+    def test_slack_slash_command_success(self, mock_process_async):
         """Test a valid Slash Command message that is under the rate limit."""
         # Mock Firestore: User not blocked, no previous messages
         mock_doc_ref = MagicMock()
         mock_doc_ref.get.return_value.exists = False # New user/no history
         db.collection.return_value.document.return_value = mock_doc_ref
 
-        mock_requests_post.return_value.status_code = 200
-
         data = {
             'user_id': 'U12345',
             'user_name': 'testuser',
             'text': 'Hello Printer',
-            'command': '/print'
+            'command': '/print',
+            'response_url': 'http://response-url'
         }
         response = self.client.post('/slack', data=data)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Message sent to printer", response.data)
+        self.assertIn(b"Sending to printer", response.data)
 
-        # Check webhook call
-        mock_requests_post.assert_called_with('http://fake-printer', json={'message': 'Hello Printer'}, timeout=10)
+        # Check async handler call
+        mock_process_async.assert_called_once()
+        # args: response_url, webhook_url, text, source
+        args, _ = mock_process_async.call_args
+        self.assertEqual(args[0], 'http://response-url')
+        self.assertEqual(args[2], 'Hello Printer')
 
         # Check Firestore update (timestamps updated)
         # Should set timestamps with one entry (now)
-        # We need to find the call that updated timestamps among all calls (including log_to_firestore)
         found_timestamps_update = False
         for call in mock_doc_ref.set.call_args_list:
             args, _ = call
@@ -80,6 +82,33 @@ class TestSlack(unittest.TestCase):
                 break
 
         self.assertTrue(found_timestamps_update, "Did not find update to timestamps")
+
+    @patch('app.process_slack_async')
+    def test_slack_event_api(self, mock_process_async):
+        """Test a valid Event API message (no response_url)."""
+        mock_doc_ref = MagicMock()
+        mock_doc_ref.get.return_value.exists = False
+        db.collection.return_value.document.return_value = mock_doc_ref
+
+        # Event API payload structure
+        data = {
+            'event': {
+                'type': 'message',
+                'user': 'U12345',
+                'text': 'Hello Event'
+            },
+            'type': 'event_callback'
+        }
+        response = self.client.post('/slack', json=data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Sending to printer", response.data)
+
+        # Check async handler call with response_url=None
+        mock_process_async.assert_called_once()
+        args, _ = mock_process_async.call_args
+        self.assertIsNone(args[0])
+        self.assertEqual(args[2], 'Hello Event')
 
     @patch('app.requests.post')
     def test_slack_rate_limit_exceeded(self, mock_requests_post):
