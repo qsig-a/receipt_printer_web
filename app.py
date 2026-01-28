@@ -287,6 +287,20 @@ def process_slack_async(response_url, webhook_url, text, source):
     except Exception as e:
         print(f"Failed to send delayed Slack response: {e}")
 
+def process_sms_async(from_number, webhook_url, body):
+    """Async handler for SMS to prevent timeouts."""
+    try:
+        r = requests.post(webhook_url, json={"message": body}, timeout=10)
+        if r.status_code == 200:
+            log_to_firestore(from_number, "SUCCESS", body)
+            send_sms(from_number, "✅ Message printed successfully!")
+        else:
+            log_to_firestore(from_number, f"HA_ERR_{r.status_code}", body)
+            send_sms(from_number, f"❌ Error printing message. HA replied: {r.status_code}")
+    except Exception as e:
+        log_to_firestore(from_number, "CONN_FAIL", f"{body} (Error: {str(e)})")
+        send_sms(from_number, "❌ Connection error while printing.")
+
 # --- Routes ---
 
 @app.route('/', methods=['GET', 'POST'])
@@ -379,17 +393,7 @@ def sms_webhook():
             send_sms(from_number, f"❌ Message too long. Limit is {CHARACTER_LIMIT} characters.")
             return "OK"
 
-        try:
-            r = requests.post(WEBHOOK_URL, json={"message": body}, timeout=10)
-            if r.status_code == 200:
-                log_to_firestore(from_number, "SUCCESS", body)
-                send_sms(from_number, "✅ Message printed successfully!")
-            else:
-                log_to_firestore(from_number, f"HA_ERR_{r.status_code}", body)
-                send_sms(from_number, f"❌ Error printing message. HA replied: {r.status_code}")
-        except Exception as e:
-            log_to_firestore(from_number, "CONN_FAIL", f"{body} (Error: {str(e)})")
-            send_sms(from_number, "❌ Connection error while printing.")
+        threading.Thread(target=process_sms_async, args=(from_number, WEBHOOK_URL, body)).start()
         return "OK"
 
     # Check if there is a pending message for this number
@@ -415,18 +419,7 @@ def sms_webhook():
 
         if body == ACCESS_PASSWORD:
             # Password correct
-            try:
-                # Send to printer webhook
-                r = requests.post(WEBHOOK_URL, json={"message": original_message}, timeout=10)
-                if r.status_code == 200:
-                    log_to_firestore(from_number, "SUCCESS", original_message)
-                    send_sms(from_number, "✅ Message printed successfully!")
-                else:
-                    log_to_firestore(from_number, f"HA_ERR_{r.status_code}", original_message)
-                    send_sms(from_number, f"❌ Error printing message. HA replied: {r.status_code}")
-            except Exception as e:
-                log_to_firestore(from_number, "CONN_FAIL", f"{original_message} (Error: {str(e)})")
-                send_sms(from_number, "❌ Connection error while printing.")
+            threading.Thread(target=process_sms_async, args=(from_number, WEBHOOK_URL, original_message)).start()
 
             # Clear pending status
             pending_ref.delete()
