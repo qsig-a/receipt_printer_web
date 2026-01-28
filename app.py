@@ -300,10 +300,11 @@ def process_slack_async(response_url, webhook_url, text, source):
         log_to_firestore(source, "CONN_FAIL", str(e))
         msg = "❌ Connection failed"
 
-    try:
-        requests.post(response_url, json={"text": msg, "response_type": "ephemeral"})
-    except Exception as e:
-        print(f"Failed to send delayed Slack response: {e}")
+    if response_url:
+        try:
+            requests.post(response_url, json={"text": msg, "response_type": "ephemeral"})
+        except Exception as e:
+            print(f"Failed to send delayed Slack response: {e}")
 
 def process_sms_async(from_number, webhook_url, body):
     """Async handler for SMS to prevent timeouts."""
@@ -492,21 +493,8 @@ def slack_webhook():
     source = f"Slack: {user_name or user_id}"
 
     response_url = data.get('response_url')
-    if response_url:
-        threading.Thread(target=process_slack_async, args=(response_url, WEBHOOK_URL, text, source)).start()
-        return {"response_type": "ephemeral", "text": "⏳ Sending to printer..."}
-
-    try:
-        r = requests.post(WEBHOOK_URL, json={"message": text}, timeout=10)
-        if r.status_code == 200:
-            log_to_firestore(source, "SUCCESS", text)
-            return {"response_type": "ephemeral", "text": "✅ Message sent to printer!"}
-        else:
-            log_to_firestore(source, f"HA_ERR_{r.status_code}", text)
-            return {"response_type": "ephemeral", "text": f"❌ Error: {r.status_code}"}
-    except Exception as e:
-        log_to_firestore(source, "CONN_FAIL", str(e))
-        return {"response_type": "ephemeral", "text": "❌ Connection failed"}
+    threading.Thread(target=process_slack_async, args=(response_url, WEBHOOK_URL, text, source)).start()
+    return {"response_type": "ephemeral", "text": "⏳ Sending to printer..."}
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
