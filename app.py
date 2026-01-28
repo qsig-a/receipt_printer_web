@@ -43,6 +43,25 @@ COLLECTION_NAME = "print_history"
 SMS_PENDING_COLLECTION = "sms_pending"
 SLACK_RATELIMITS_COLLECTION = "slack_ratelimits"
 
+# Global SignalWire Client (Lazy Initialization)
+_signalwire_client = None
+
+def get_signalwire_client():
+    global _signalwire_client
+    if _signalwire_client:
+        return _signalwire_client
+
+    if not all([SIGNALWIRE_PROJECT_ID, SIGNALWIRE_TOKEN, SIGNALWIRE_SPACE_URL, SIGNALWIRE_FROM_NUMBER]):
+        print("SignalWire configuration missing, skipping SMS.")
+        return None
+
+    try:
+        _signalwire_client = signalwire_client(SIGNALWIRE_PROJECT_ID, SIGNALWIRE_TOKEN, signalwire_space_url=SIGNALWIRE_SPACE_URL)
+        return _signalwire_client
+    except Exception as e:
+        print(f"Failed to initialize SignalWire client: {e}")
+        return None
+
 # --- UI Templates (Unchanged) ---
 SHARED_CSS = """
 :root {
@@ -167,12 +186,11 @@ HISTORY_HTML = """
 
 def send_sms(to_number, body):
     """Sends an SMS using SignalWire."""
-    if not all([SIGNALWIRE_PROJECT_ID, SIGNALWIRE_TOKEN, SIGNALWIRE_SPACE_URL, SIGNALWIRE_FROM_NUMBER]):
-        print("SignalWire configuration missing, skipping SMS.")
+    client = get_signalwire_client()
+    if not client:
         return
 
     try:
-        client = signalwire_client(SIGNALWIRE_PROJECT_ID, SIGNALWIRE_TOKEN, signalwire_space_url=SIGNALWIRE_SPACE_URL)
         message = client.messages.create(
             from_=SIGNALWIRE_FROM_NUMBER,
             to=to_number,

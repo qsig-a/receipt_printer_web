@@ -18,10 +18,14 @@ os.environ['SIGNALWIRE_TOKEN'] = 'fake_token'
 os.environ['SIGNALWIRE_SPACE_URL'] = 'fake_url'
 os.environ['SIGNALWIRE_FROM_NUMBER'] = 'fake_from'
 
+import app as app_module
 from app import app, db
 
 class TestSMS(unittest.TestCase):
     def setUp(self):
+        # Reset global client to ensure fresh initialization for each test
+        app_module._signalwire_client = None
+
         self.client = app.test_client()
 
         # Reset mocks
