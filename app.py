@@ -102,6 +102,10 @@ body {
     width: 100%; max-width: 600px; text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.5);
 }
+label {
+    display: block; text-align: left; font-weight: 500;
+    margin-top: 1rem; font-size: 0.9rem; color: #334155;
+}
 input, textarea {
     width: 100%; padding: 0.75rem 1rem; border: 2px solid #e2e8f0;
     border-radius: 12px; font-size: 1rem; margin-top: 0.5rem;
@@ -140,14 +144,19 @@ textarea { resize: vertical; min-height: 120px; font-family: monospace; width: 4
 INDEX_HTML = """
 <!DOCTYPE html>
 <html>
-<head><style>""" + SHARED_CSS + """</style></head>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>""" + SHARED_CSS + """</style>
+</head>
 <body>
     <div class="container">
         <h2>Remote Print 📠</h2>
         <p>Send a message directly to my desk.</p>
         <form method="POST">
-            <input type="password" name="password" placeholder="Keycode" required>
-            <textarea name="message" placeholder="Type your message here..." required></textarea>
+            <label for="password">Access Key</label>
+            <input type="password" id="password" name="password" placeholder="Keycode" required>
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="Type your message here..." required></textarea>
             <button type="submit" class="btn btn-primary">Print Now</button>
         </form>
         {% if status %}<div class="status-box {% if '❌' in status %}status-error{% endif %}">{{ status }}</div>{% endif %}
@@ -159,13 +168,17 @@ INDEX_HTML = """
 HISTORY_HTML = """
 <!DOCTYPE html>
 <html>
-<head><style>""" + SHARED_CSS + """</style></head>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>""" + SHARED_CSS + """</style>
+</head>
 <body>
     <div class="container" style="max-width: 900px;">
         <h2>Print History 📜</h2>
         {% if not authorized %}
         <form method="POST">
-            <input type="password" name="admin_password" placeholder="Admin Password" required>
+            <label for="admin_password">Admin Access</label>
+            <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required>
             <button type="submit" class="btn btn-primary">View Logs</button>
         </form>
         {% else %}
