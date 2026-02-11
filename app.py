@@ -5,6 +5,7 @@ import io
 import csv
 import time
 import threading
+from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 from google.cloud import firestore
@@ -35,7 +36,7 @@ LOG_HISTORY_LIMIT = int(os.environ.get('LOG_HISTORY_LIMIT', 50))
 SMS_WHITELIST_COLLECTION = "sms_whitelist"
 
 # SMS Whitelist Cache
-WHITELIST_CACHE = {}
+WHITELIST_CACHE = OrderedDict()
 WHITELIST_CACHE_LOCK = threading.Lock()
 WHITELIST_TTL = 300  # 5 minutes
 WHITELIST_CACHE_LIMIT = 1000
@@ -342,6 +343,10 @@ def is_number_whitelisted(number):
     with WHITELIST_CACHE_LOCK:
         if number in WHITELIST_CACHE:
             timestamp, is_whitelisted = WHITELIST_CACHE[number]
+
+            # Refresh LRU position
+            WHITELIST_CACHE.move_to_end(number)
+
             if current_time - timestamp < WHITELIST_TTL:
                 return is_whitelisted
             else:
@@ -365,11 +370,14 @@ def is_number_whitelisted(number):
 
     # Update cache
     with WHITELIST_CACHE_LOCK:
-        # If cache is full, clear it to avoid memory leak
+        # If cache is full, remove oldest item (LRU)
         if len(WHITELIST_CACHE) >= WHITELIST_CACHE_LIMIT:
-            WHITELIST_CACHE.clear()
+            # last=False removes the first (oldest) item
+            WHITELIST_CACHE.popitem(last=False)
 
         WHITELIST_CACHE[number] = (current_time, is_whitelisted)
+        # Ensure it's at the end (newest)
+        WHITELIST_CACHE.move_to_end(number)
 
     return is_whitelisted
 
