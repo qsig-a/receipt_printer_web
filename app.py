@@ -35,11 +35,20 @@ LOG_HISTORY_LIMIT = int(os.environ.get('LOG_HISTORY_LIMIT', 50))
 # SMS Whitelist
 SMS_WHITELIST_COLLECTION = "sms_whitelist"
 
+def get_env_int(key, default):
+    try:
+        val = os.environ.get(key)
+        if val is None:
+            return default
+        return int(val)
+    except ValueError:
+        return default
+
 # SMS Whitelist Cache
 WHITELIST_CACHE = OrderedDict()
 WHITELIST_CACHE_LOCK = threading.Lock()
-WHITELIST_TTL = 300  # 5 minutes
-WHITELIST_CACHE_LIMIT = 1000
+WHITELIST_TTL = get_env_int('SMS_WHITELIST_TTL', 300)  # Default 5 minutes
+WHITELIST_CACHE_LIMIT = get_env_int('SMS_WHITELIST_LIMIT', 1000)
 
 # Convert the string env variable to an integer if it exists
 char_limit_raw = os.environ.get('CHARACTER_LIMIT')
@@ -371,7 +380,7 @@ def is_number_whitelisted(number):
     # Update cache
     with WHITELIST_CACHE_LOCK:
         # If cache is full, remove oldest item (LRU)
-        if len(WHITELIST_CACHE) >= WHITELIST_CACHE_LIMIT:
+        if len(WHITELIST_CACHE) >= WHITELIST_CACHE_LIMIT and len(WHITELIST_CACHE) > 0:
             # last=False removes the first (oldest) item
             WHITELIST_CACHE.popitem(last=False)
 
