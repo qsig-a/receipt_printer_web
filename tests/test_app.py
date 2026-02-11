@@ -114,10 +114,14 @@ class TestApp(unittest.TestCase):
     def test_clear_history_authorized(self, mock_db):
         # Mock batch deletion
         mock_docs = [MagicMock(), MagicMock()]
-        mock_db.collection.return_value.limit.return_value.stream.return_value = mock_docs
+        # Mock the chain: db.collection().limit().select([]).stream()
+        mock_db.collection.return_value.limit.return_value.select.return_value.stream.return_value = mock_docs
 
         response = self.client.post('/clear-history', data={'admin_password': 'adminsecret'})
         self.assertEqual(response.status_code, 302) # Redirects to index
+
+        # Verify select([]) was called
+        mock_db.collection.return_value.limit.return_value.select.assert_called_with([])
 
         mock_db.batch.return_value.delete.assert_any_call(mock_docs[0].reference)
         mock_db.batch.return_value.delete.assert_any_call(mock_docs[1].reference)

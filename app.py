@@ -382,7 +382,7 @@ def download_csv():
 def clear_history():
     if request.form.get('admin_password') == ADMIN_PASSWORD:
         # Delete documents in batches (standard Firestore pattern)
-        docs = db.collection(COLLECTION_NAME).limit(500).stream()
+        docs = db.collection(COLLECTION_NAME).limit(500).select([]).stream()
         batch = db.batch()
         for doc in docs:
             batch.delete(doc.reference)
