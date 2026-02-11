@@ -5,6 +5,7 @@ import io
 import threading
 import csv
 from datetime import datetime, timedelta, timezone
+from concurrent.futures import ThreadPoolExecutor
 from google.cloud import firestore
 from signalwire.rest import Client as signalwire_client
 
@@ -42,6 +43,9 @@ db = firestore.Client(database="receipt-printer")
 COLLECTION_NAME = "print_history"
 SMS_PENDING_COLLECTION = "sms_pending"
 SLACK_RATELIMITS_COLLECTION = "slack_ratelimits"
+
+# Thread Pool Executor for background tasks
+executor = ThreadPoolExecutor(max_workers=10)
 
 # Global SignalWire Client (Lazy Initialization)
 _signalwire_client = None
@@ -412,7 +416,7 @@ def sms_webhook():
             send_sms(from_number, f"❌ Message too long. Limit is {CHARACTER_LIMIT} characters.")
             return "OK"
 
-        threading.Thread(target=process_sms_async, args=(from_number, WEBHOOK_URL, body)).start()
+        executor.submit(process_sms_async, from_number, WEBHOOK_URL, body)
         return "OK"
 
     # Check if there is a pending message for this number
@@ -438,7 +442,7 @@ def sms_webhook():
 
         if body == ACCESS_PASSWORD:
             # Password correct
-            threading.Thread(target=process_sms_async, args=(from_number, WEBHOOK_URL, original_message)).start()
+            executor.submit(process_sms_async, from_number, WEBHOOK_URL, original_message)
 
             # Clear pending status
             pending_ref.delete()
@@ -490,7 +494,7 @@ def slack_webhook():
     source = f"Slack: {user_name or user_id}"
 
     response_url = data.get('response_url')
-    threading.Thread(target=process_slack_async, args=(response_url, WEBHOOK_URL, text, source)).start()
+    executor.submit(process_slack_async, response_url, WEBHOOK_URL, text, source)
     return {"response_type": "ephemeral", "text": "⏳ Sending to printer..."}
 
 if __name__ == '__main__':

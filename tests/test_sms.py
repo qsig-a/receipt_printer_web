@@ -49,21 +49,19 @@ class TestSMS(unittest.TestCase):
             patch('app.SIGNALWIRE_FROM_NUMBER', 'fake_from'),
             patch('app.ACCESS_PASSWORD', 'secret'),
             patch('app.WEBHOOK_URL', 'http://fake-printer'),
-            patch('app.threading.Thread')
+            patch('app.executor')
         ]
         self.started_patchers = []
         for p in self.patchers:
             started = p.start()
             self.started_patchers.append(started)
 
-        # Configure Thread mock to run immediately
-        # The last patcher is threading.Thread
-        mock_thread_cls = self.started_patchers[-1]
-        def run_immediately(target, args):
-            t = MagicMock()
-            t.start.side_effect = lambda: target(*args)
-            return t
-        mock_thread_cls.side_effect = run_immediately
+        # Configure Executor mock to run immediately
+        # The last patcher is executor
+        mock_executor = self.started_patchers[-1]
+        def run_immediately(fn, *args, **kwargs):
+            return fn(*args, **kwargs)
+        mock_executor.submit.side_effect = run_immediately
 
     def tearDown(self):
         for p in self.patchers:
