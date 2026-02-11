@@ -3,6 +3,8 @@ import requests
 import os
 import io
 import csv
+import time
+import threading
 from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 from google.cloud import firestore
@@ -31,6 +33,12 @@ LOG_HISTORY_LIMIT = int(os.environ.get('LOG_HISTORY_LIMIT', 50))
 
 # SMS Whitelist
 SMS_WHITELIST_COLLECTION = "sms_whitelist"
+
+# SMS Whitelist Cache
+WHITELIST_CACHE = {}
+WHITELIST_CACHE_LOCK = threading.Lock()
+WHITELIST_TTL = 300  # 5 minutes
+WHITELIST_CACHE_LIMIT = 1000
 
 # Convert the string env variable to an integer if it exists
 char_limit_raw = os.environ.get('CHARACTER_LIMIT')
@@ -323,6 +331,48 @@ def process_sms_async(from_number, webhook_url, body):
         log_to_firestore(from_number, "CONN_FAIL", f"{body} (Error: {str(e)})")
         send_sms(from_number, "❌ Connection error while printing.")
 
+def is_number_whitelisted(number):
+    """
+    Checks if a number is whitelisted using a thread-safe in-memory cache
+    to reduce Firestore reads. Cache expires after 5 minutes.
+    """
+    current_time = time.time()
+
+    # Check cache first
+    with WHITELIST_CACHE_LOCK:
+        if number in WHITELIST_CACHE:
+            timestamp, is_whitelisted = WHITELIST_CACHE[number]
+            if current_time - timestamp < WHITELIST_TTL:
+                return is_whitelisted
+            else:
+                # Expired
+                del WHITELIST_CACHE[number]
+
+    # Not in cache or expired, check Firestore
+    is_whitelisted = False
+    try:
+        docs = db.collection(SMS_WHITELIST_COLLECTION).where('number', '==', number).limit(1).stream()
+        for _ in docs:
+            is_whitelisted = True
+            break
+    except Exception as e:
+        print(f"Error checking whitelist: {e}")
+        # On error, default to False but don't cache potentially transient errors?
+        # Or cache False to prevent hammering DB?
+        # Let's not cache errors for now, or maybe cache for a short time.
+        # But for simplicity, we'll just return False and not update cache if exception occurs.
+        return False
+
+    # Update cache
+    with WHITELIST_CACHE_LOCK:
+        # If cache is full, clear it to avoid memory leak
+        if len(WHITELIST_CACHE) >= WHITELIST_CACHE_LIMIT:
+            WHITELIST_CACHE.clear()
+
+        WHITELIST_CACHE[number] = (current_time, is_whitelisted)
+
+    return is_whitelisted
+
 # --- Routes ---
 
 @app.route('/', methods=['GET', 'POST'])
@@ -401,14 +451,7 @@ def sms_webhook():
         return "Missing From number", 400
 
     # Check whitelist
-    is_whitelisted = False
-    try:
-        docs = db.collection(SMS_WHITELIST_COLLECTION).where('number', '==', from_number).limit(1).stream()
-        for _ in docs:
-            is_whitelisted = True
-            break
-    except Exception as e:
-        print(f"Error checking whitelist: {e}")
+    is_whitelisted = is_number_whitelisted(from_number)
 
     if is_whitelisted:
         if CHARACTER_LIMIT and len(body) > CHARACTER_LIMIT:
