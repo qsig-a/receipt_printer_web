@@ -24,10 +24,20 @@ class TestSlack(unittest.TestCase):
         self.patchers = [
             patch('app.SLACK_MESSAGE_LIMIT', 2),
             patch('app.SLACK_LIMIT_PERIOD', 1),
-            patch('app.WEBHOOK_URL', 'http://fake-printer')
+            patch('app.WEBHOOK_URL', 'http://fake-printer'),
+            patch('app.executor')
         ]
+        self.started_patchers = []
         for p in self.patchers:
-            p.start()
+            started = p.start()
+            self.started_patchers.append(started)
+
+        # Configure Executor mock to run immediately
+        # The last patcher is executor
+        mock_executor = self.started_patchers[-1]
+        def run_immediately(fn, *args, **kwargs):
+            return fn(*args, **kwargs)
+        mock_executor.submit.side_effect = run_immediately
 
     def tearDown(self):
         for p in self.patchers:
