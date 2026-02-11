@@ -484,7 +484,7 @@ def sms_webhook():
 
         if body == ACCESS_PASSWORD:
             # Password correct
-            # Use ThreadPoolExecutor to prevent unbounded thread creation
+            # Use ThreadPoolExecutor to prevent unbounded thread creation and improve stability under load
             future = executor.submit(process_sms_async, from_number, WEBHOOK_URL, original_message)
 
             # Clear pending status
