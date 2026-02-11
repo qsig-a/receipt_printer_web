@@ -2,7 +2,6 @@ from flask import Flask, render_template_string, request, redirect, url_for, Res
 import requests
 import os
 import io
-import threading
 import csv
 from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
