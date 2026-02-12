@@ -120,8 +120,10 @@ textarea { resize: vertical; min-height: 120px; font-family: monospace; width: 4
 }
 .btn-primary { background-color: var(--primary); }
 .btn-primary:hover { background-color: var(--primary-hover); }
+.btn-primary:disabled { background-color: #94a3b8; cursor: not-allowed; }
 .btn-danger { background-color: var(--danger); margin-top: 2rem; }
 .btn-secondary { background-color: #64748b; }
+input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
 .status-box {
     margin-top: 1.5rem; padding: 1rem; background: #fff;
     border-left: 4px solid #10b981; border-radius: 4px;
@@ -159,8 +161,15 @@ INDEX_HTML = """
             <textarea id="message" name="message" placeholder="Type your message here..." required></textarea>
             <button type="submit" class="btn btn-primary">Print Now</button>
         </form>
-        {% if status %}<div class="status-box {% if '❌' in status %}status-error{% endif %}">{{ status }}</div>{% endif %}
+        {% if status %}<div role="alert" class="status-box {% if '❌' in status %}status-error{% endif %}">{{ status }}</div>{% endif %}
     </div>
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = "Sending... ⏳";
+        });
+    </script>
 </body>
 </html>
 """
