@@ -1,3 +1,7 @@
 ## 2024-05-22 - Accessibility in Embedded Templates
 **Learning:** This Flask application embeds HTML templates directly in Python strings, which led to missing standard accessibility features like `<label>` elements and viewport meta tags.
 **Action:** When working with embedded templates, explicitly check for and add `<label>` elements and responsiveness meta tags to ensure basic accessibility and mobile usability.
+
+## 2025-02-23 - Status Message Accessibility
+**Learning:** The application uses a generic `.status-box` div for feedback, which is not announced by screen readers on page reload.
+**Action:** Always add `role="alert"` to feedback containers in server-rendered templates to ensure screen reader users are immediately aware of the form submission outcome.
