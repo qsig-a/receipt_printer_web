@@ -157,8 +157,14 @@ INDEX_HTML = """
         <form method="POST">
             <label for="password">Access Key</label>
             <input type="password" id="password" name="password" placeholder="Keycode" required>
-            <label for="message">Message</label>
-            <textarea id="message" name="message" placeholder="Type your message here..." required></textarea>
+            <label for="message">Message
+                {% if char_limit %}
+                <span id="char-count" style="float: right; font-weight: normal; color: #64748b; font-size: 0.8em;">0/{{ char_limit }}</span>
+                {% endif %}
+            </label>
+            <textarea id="message" name="message" placeholder="Type your message here..." required
+                {% if char_limit %}maxlength="{{ char_limit }}" oninput="document.getElementById('char-count').innerText = this.value.length + '/{{ char_limit }}'"{% endif %}
+            ></textarea>
             <button type="submit" class="btn btn-primary">Print Now</button>
         </form>
         {% if status %}<div role="alert" class="status-box {% if '❌' in status %}status-error{% endif %}">{{ status }}</div>{% endif %}
@@ -440,7 +446,7 @@ def index():
             except Exception as e:
                 status = f"❌ CONN_FAIL: {str(e)}"
                 log_to_firestore(ip, "CONN_FAIL", str(e))
-    return render_template_string(INDEX_HTML, status=status)
+    return render_template_string(INDEX_HTML, status=status, char_limit=CHARACTER_LIMIT)
 
 @app.route('/history', methods=['GET', 'POST'])
 def history():
