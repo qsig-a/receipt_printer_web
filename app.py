@@ -156,7 +156,7 @@ INDEX_HTML = """
         <p>Send a message directly to my desk.</p>
         <form method="POST">
             <label for="password">Access Key</label>
-            <input type="password" id="password" name="password" placeholder="Keycode" required>
+            <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password">
             <label for="message">Message
                 {% if char_limit %}
                 <span id="char-count" style="float: right; font-weight: normal; color: #64748b; font-size: 0.8em;">0/{{ char_limit }}</span>
@@ -165,6 +165,7 @@ INDEX_HTML = """
             <textarea id="message" name="message" placeholder="Type your message here..." required
                 {% if char_limit %}maxlength="{{ char_limit }}" oninput="document.getElementById('char-count').innerText = this.value.length + '/{{ char_limit }}'"{% endif %}
             ></textarea>
+            <div style="text-align: right; font-size: 0.75em; color: #64748b; margin-top: 4px;">Press <strong>Ctrl+Enter</strong> to send</div>
             <button type="submit" class="btn btn-primary">Print Now</button>
         </form>
         {% if status %}<div role="alert" class="status-box {% if '❌' in status %}status-error{% endif %}">{{ status }}</div>{% endif %}
@@ -174,6 +175,12 @@ INDEX_HTML = """
             const btn = this.querySelector('button[type="submit"]');
             btn.disabled = true;
             btn.innerHTML = "Sending... ⏳";
+        });
+        document.getElementById('message').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                document.querySelector('button[type="submit"]').click();
+            }
         });
     </script>
 </body>
