@@ -159,12 +159,12 @@ INDEX_HTML = """
             <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password">
             <label for="message">Message
                 {% if char_limit %}
-                <span id="char-count" style="float: right; font-weight: normal; color: #64748b; font-size: 0.8em;">0/{{ char_limit }}</span>
+                <span id="char-count" style="float: right; font-weight: normal; color: #64748b; font-size: 0.8em;">{{ submitted_message|length if submitted_message else 0 }}/{{ char_limit }}</span>
                 {% endif %}
             </label>
             <textarea id="message" name="message" placeholder="Type your message here..." required
                 {% if char_limit %}maxlength="{{ char_limit }}" oninput="document.getElementById('char-count').innerText = this.value.length + '/{{ char_limit }}'"{% endif %}
-            ></textarea>
+            >{{ submitted_message or '' }}</textarea>
             <div style="text-align: right; font-size: 0.75em; color: #64748b; margin-top: 4px;">Press <strong>Ctrl+Enter</strong> to send</div>
             <button type="submit" class="btn btn-primary">Print Now</button>
         </form>
@@ -430,9 +430,11 @@ def is_number_whitelisted(number):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     status = None
+    submitted_message = ""
     if request.method == 'POST':
         user_pw = request.form.get('password')
         msg = request.form.get('message')
+        submitted_message = msg
         ip = request.headers.get('X-Forwarded-For', request.remote_addr)
 
         if user_pw != ACCESS_PASSWORD:
@@ -447,13 +449,14 @@ def index():
                 if r.status_code == 200:
                     status = "✅ PRINT_SUCCESS: Message queued"
                     log_to_firestore(ip, "SUCCESS", msg)
+                    submitted_message = ""
                 else:
                     status = f"❌ HA_ERR: {r.status_code}"
                     log_to_firestore(ip, f"HA_ERR_{r.status_code}", msg)
             except Exception as e:
                 status = f"❌ CONN_FAIL: {str(e)}"
                 log_to_firestore(ip, "CONN_FAIL", str(e))
-    return render_template_string(INDEX_HTML, status=status, char_limit=CHARACTER_LIMIT)
+    return render_template_string(INDEX_HTML, status=status, char_limit=CHARACTER_LIMIT, submitted_message=submitted_message)
 
 @app.route('/history', methods=['GET', 'POST'])
 def history():
