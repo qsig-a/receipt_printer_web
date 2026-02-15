@@ -86,61 +86,74 @@ def get_signalwire_client():
 # --- UI Templates (Unchanged) ---
 SHARED_CSS = """
 :root {
-    --primary: #6366f1; --primary-hover: #4f46e5; --danger: #ef4444;
-    --danger-hover: #dc2626; --bg: #f8fafc; --card-bg: rgba(255, 255, 255, 0.9);
+    --primary: #3b82f6; --primary-hover: #2563eb; --danger: #ef4444;
+    --danger-hover: #dc2626; --bg: #111827; --card-bg: #1f2937;
+    --text: #f3f4f6; --text-muted: #9ca3af;
+    --input-bg: #374151; --border: #4b5563;
 }
 body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
+    background: var(--bg);
     display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; margin: 0; color: #1e293b;
+    min-height: 100vh; margin: 0; color: var(--text);
 }
 .container {
-    background: var(--card-bg); backdrop-filter: blur(10px);
+    background: var(--card-bg);
     padding: 2.5rem; border-radius: 20px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
     width: 100%; max-width: 600px; text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--border);
 }
 label {
     display: block; text-align: left; font-weight: 500;
-    margin-top: 1rem; font-size: 0.9rem; color: #334155;
+    margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);
+    margin-bottom: 0.5rem;
 }
 input, textarea {
-    width: 100%; padding: 0.75rem 1rem; border: 2px solid #e2e8f0;
-    border-radius: 12px; font-size: 1rem; margin-top: 0.5rem;
-    box-sizing: border-box; background: white; font-family: inherit;
+    width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 1rem;
+    box-sizing: border-box; background: var(--input-bg);
+    color: var(--text); font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-textarea { resize: vertical; min-height: 120px; font-family: monospace; width: 48ch; max-width: 100%; box-sizing: content-box; margin-left: auto; margin-right: auto; display: block; }
+textarea { resize: vertical; min-height: 120px; font-family: monospace; width: 100%; display: block; }
 .btn {
     width: 100%; padding: 0.75rem; color: white; border: none; 
-    border-radius: 12px; font-weight: 600; cursor: pointer; 
-    transition: all 0.2s; margin-top: 1rem; text-decoration: none; display: block;
+    border-radius: 8px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; margin-top: 1.5rem; text-decoration: none; display: block;
     box-sizing: border-box;
 }
 .btn-primary { background-color: var(--primary); }
 .btn-primary:hover { background-color: var(--primary-hover); }
-.btn-primary:disabled { background-color: #94a3b8; cursor: not-allowed; }
+.btn-primary:disabled { background-color: var(--border); cursor: not-allowed; color: var(--text-muted); }
 .btn-danger { background-color: var(--danger); margin-top: 2rem; }
-.btn-secondary { background-color: #64748b; }
-input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+.btn-secondary { background-color: var(--border); color: var(--text); }
+.btn-secondary:hover { background-color: #6b7280; }
+input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
 .status-box {
-    margin-top: 1.5rem; padding: 1rem; background: #fff;
+    margin-top: 1.5rem; padding: 1rem; background: var(--input-bg);
     border-left: 4px solid #10b981; border-radius: 4px;
     font-family: 'Courier New', monospace; font-size: 0.85rem; text-align: left;
+    color: var(--text);
 }
 .status-error { border-left-color: #ef4444; }
 .history-table {
     width: 100%; border-collapse: collapse; margin-top: 1.5rem;
-    background: white; border-radius: 12px; overflow: hidden; font-size: 0.85rem;
+    background: var(--card-bg); border-radius: 12px; overflow: hidden; font-size: 0.85rem;
 }
-.history-table th { background: #f1f5f9; padding: 12px; text-align: left; color: #475569; }
-.history-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: left; vertical-align: top; }
+.history-table th { background: #111827; padding: 12px; text-align: left; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.history-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; color: var(--text); }
 .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-.badge-ok { background: #dcfce7; color: #166534; }
-.badge-err { background: #fee2e2; color: #991b1b; }
+.badge-ok { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.badge-err { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 .admin-actions { display: flex; gap: 10px; margin-top: 2rem; }
 .admin-actions form { flex: 1; }
+.input-group { margin-top: 1rem; text-align: left; }
+.textarea-wrapper { position: relative; }
+.textarea-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);
+}
 """
 
 INDEX_HTML = """
@@ -155,17 +168,24 @@ INDEX_HTML = """
         <h2>Remote Print 📠</h2>
         <p>Send a message directly to my desk.</p>
         <form method="POST">
-            <label for="password">Access Key</label>
-            <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password">
-            <label for="message">Message
-                {% if char_limit %}
-                <span id="char-count" style="float: right; font-weight: normal; color: #64748b; font-size: 0.8em;">{{ submitted_message|length if submitted_message else 0 }}/{{ char_limit }}</span>
-                {% endif %}
-            </label>
-            <textarea id="message" name="message" placeholder="Type your message here..." required
-                {% if char_limit %}maxlength="{{ char_limit }}" oninput="document.getElementById('char-count').innerText = this.value.length + '/{{ char_limit }}'"{% endif %}
-            >{{ submitted_message or '' }}</textarea>
-            <div style="text-align: right; font-size: 0.75em; color: #64748b; margin-top: 4px;">Press <strong>Ctrl+Enter</strong> to send</div>
+            <div class="input-group">
+                <label for="password">Access Key</label>
+                <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password">
+            </div>
+            <div class="input-group">
+                <label for="message">Message</label>
+                <div class="textarea-wrapper">
+                    <textarea id="message" name="message" placeholder="Type your message here..." required
+                        {% if char_limit %}maxlength="{{ char_limit }}" oninput="document.getElementById('char-count').innerText = this.value.length + '/{{ char_limit }}'"{% endif %}
+                    >{{ submitted_message or '' }}</textarea>
+                    <div class="textarea-footer">
+                        <span>Press <strong>Ctrl+Enter</strong> to send</span>
+                        {% if char_limit %}
+                        <span id="char-count">{{ submitted_message|length if submitted_message else 0 }}/{{ char_limit }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
             <button type="submit" class="btn btn-primary">Print Now</button>
         </form>
         {% if status %}<div role="alert" class="status-box {% if '❌' in status %}status-error{% endif %}">{{ status }}</div>{% endif %}
@@ -212,7 +232,7 @@ HISTORY_HTML = """
                 <tbody>
                     {% for log in logs %}
                     <tr>
-                        <td style="white-space: nowrap; color: #64748b;">{{ log.time }}</td>
+                        <td style="white-space: nowrap; color: var(--text-muted);">{{ log.time }}</td>
                         <td style="font-family: monospace;">{{ log.source }}</td>
                         <td><span class="badge {% if log.status == 'SUCCESS' %}badge-ok{% else %}badge-err{% endif %}">{{ log.status }}</span></td>
                         <td style="word-break: break-all;">{{ log.msg }}</td>
