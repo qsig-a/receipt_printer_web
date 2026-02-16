@@ -170,7 +170,12 @@ INDEX_HTML = """
         <form method="POST">
             <div class="input-group">
                 <label for="password">Access Key</label>
-                <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password">
+                <div style="position: relative;">
+                    <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password" style="padding-right: 40px;">
+                    <button type="button" aria-label="Show password" onclick="togglePassword(this)" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
+                        👁️
+                    </button>
+                </div>
             </div>
             <div class="input-group">
                 <label for="message">Message</label>
@@ -202,6 +207,20 @@ INDEX_HTML = """
                 document.querySelector('button[type="submit"]').click();
             }
         });
+        function togglePassword(btn) {
+            const input = document.getElementById('password');
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = '🙈';
+                btn.setAttribute('aria-label', 'Hide password');
+                btn.style.color = 'var(--text)';
+            } else {
+                input.type = 'password';
+                btn.innerHTML = '👁️';
+                btn.setAttribute('aria-label', 'Show password');
+                btn.style.color = 'var(--text-muted)';
+            }
+        }
     </script>
 </body>
 </html>

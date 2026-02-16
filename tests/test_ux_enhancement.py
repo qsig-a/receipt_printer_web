@@ -47,5 +47,25 @@ class TestUXEnhancement(unittest.TestCase):
         self.assertNotIn('maxlength="', content)
         self.assertNotIn('0/', content)
 
+    def test_password_toggle_elements_exist(self):
+        """Verify that the password toggle button and wrapper exist in the HTML."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+
+        # Check for the wrapper with relative positioning
+        self.assertIn('style="position: relative;"', html)
+
+        # Check for the password input with padding
+        self.assertIn('style="padding-right: 40px;"', html)
+
+        # Check for the toggle button
+        self.assertIn('onclick="togglePassword(this)"', html)
+        self.assertIn('aria-label="Show password"', html)
+        self.assertIn('👁️', html)
+
+        # Check for the JS function
+        self.assertIn('function togglePassword(btn)', html)
+
 if __name__ == '__main__':
     unittest.main()
