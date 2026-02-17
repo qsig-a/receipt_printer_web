@@ -116,7 +116,7 @@ input, textarea {
     color: var(--text); font-family: inherit;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
-textarea { resize: vertical; min-height: 120px; font-family: monospace; width: 100%; display: block; }
+textarea { resize: none; min-height: 120px; font-family: monospace; width: 100%; display: block; overflow-y: hidden; }
 .btn {
     width: 100%; padding: 0.75rem; color: white; border: none; 
     border-radius: 8px; font-weight: 600; cursor: pointer;
@@ -207,6 +207,15 @@ INDEX_HTML = """
                 document.querySelector('button[type="submit"]').click();
             }
         });
+        const textarea = document.getElementById('message');
+        const autoResize = () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        };
+        textarea.addEventListener('input', autoResize);
+        // Initial resize in case of pre-filled content
+        autoResize();
+
         function togglePassword(btn) {
             const input = document.getElementById('password');
             if (input.type === 'password') {
