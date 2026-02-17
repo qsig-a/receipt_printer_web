@@ -67,5 +67,19 @@ class TestUXEnhancement(unittest.TestCase):
         # Check for the JS function
         self.assertIn('function togglePassword(btn)', html)
 
+    def test_textarea_resize_behavior(self):
+        """Verify the textarea resize behavior in CSS and auto-resize JS."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+
+        # Check for CSS changes
+        self.assertIn('resize: none', html)
+        self.assertIn('overflow-y: hidden', html)
+
+        # Check for JS changes
+        self.assertIn('const autoResize = () => {', html)
+        self.assertIn('textarea.addEventListener(\'input\', autoResize);', html)
+
 if __name__ == '__main__':
     unittest.main()
