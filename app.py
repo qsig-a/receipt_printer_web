@@ -154,6 +154,13 @@ input:focus, textarea:focus { outline: none; border-color: var(--primary); box-s
     display: flex; justify-content: space-between; align-items: center;
     margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);
 }
+.msg-cell { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.msg-content { word-break: break-all; }
+.copy-btn {
+    background: none; border: none; cursor: pointer; opacity: 0.5;
+    font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; transition: all 0.2s;
+}
+.copy-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
 """
 
 INDEX_HTML = """
@@ -263,7 +270,10 @@ HISTORY_HTML = """
                         <td style="white-space: nowrap; color: var(--text-muted);">{{ log.time }}</td>
                         <td style="font-family: monospace;">{{ log.source }}</td>
                         <td><span class="badge {% if log.status == 'SUCCESS' %}badge-ok{% else %}badge-err{% endif %}">{{ log.status }}</span></td>
-                        <td style="word-break: break-all;">{{ log.msg }}</td>
+                        <td class="msg-cell">
+                            <span class="msg-content">{{ log.msg }}</span>
+                            <button class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy message" title="Copy to clipboard">📋</button>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -282,6 +292,23 @@ HISTORY_HTML = """
         <a href="/" class="btn btn-secondary">Back to Portal</a>
         {% endif %}
     </div>
+    <script>
+        function copyToClipboard(btn) {
+            const text = btn.previousElementSibling.innerText;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const original = btn.innerText;
+                    btn.innerText = '✅';
+                    setTimeout(() => btn.innerText = original, 1500);
+                }).catch(err => {
+                    console.error('Failed to copy', err);
+                    btn.innerText = '❌';
+                });
+            } else {
+                alert("Copy not supported (secure context required).");
+            }
+        }
+    </script>
 </body>
 </html>
 """

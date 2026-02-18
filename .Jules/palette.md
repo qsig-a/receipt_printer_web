@@ -13,3 +13,7 @@
 ## 2025-05-24 - Persist User Input on Error
 **Learning:** Users lose their typed message if the submission fails (e.g., wrong password), causing significant frustration.
 **Action:** Always re-populate form fields with the submitted data when rendering an error state, so users can correct the issue without retyping.
+
+## 2025-05-25 - Copy Utility in Data Tables
+**Learning:** Text in data tables (especially logs) is hard to select precisely. Adding a dedicated 'Copy' button reduces friction for administrative tasks.
+**Action:** For read-only data views (like logs or histories), consider adding copy-to-clipboard actions for complex or long fields.
