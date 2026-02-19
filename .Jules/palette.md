@@ -17,3 +17,7 @@
 ## 2025-05-25 - Copy Utility in Data Tables
 **Learning:** Text in data tables (especially logs) is hard to select precisely. Adding a dedicated 'Copy' button reduces friction for administrative tasks.
 **Action:** For read-only data views (like logs or histories), consider adding copy-to-clipboard actions for complex or long fields.
+
+## 2025-05-26 - Empty States for Data Tables
+**Learning:** Tables without data look broken and confusing. Users might think the data failed to load.
+**Action:** Always include an empty state (e.g., using Jinja's `{% else %}` block in loops) to reassure users that the system is working but there is no data.
