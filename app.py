@@ -275,6 +275,12 @@ HISTORY_HTML = """
                             <button class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy message" title="Copy to clipboard">📋</button>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            No print history found 📭
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
