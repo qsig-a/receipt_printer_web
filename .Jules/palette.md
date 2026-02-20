@@ -21,3 +21,7 @@
 ## 2025-05-26 - Empty States for Data Tables
 **Learning:** Tables without data look broken and confusing. Users might think the data failed to load.
 **Action:** Always include an empty state (e.g., using Jinja's `{% else %}` block in loops) to reassure users that the system is working but there is no data.
+
+## 2025-05-27 - Context for Textareas
+**Learning:** Screen reader users miss helpful context (like shortcuts and limits) when it's just visual text near the input.
+**Action:** Use `aria-describedby` to programmatically link helper text and character counters to the input they describe.

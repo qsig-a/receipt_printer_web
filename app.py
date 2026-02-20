@@ -188,10 +188,11 @@ INDEX_HTML = """
                 <label for="message">Message</label>
                 <div class="textarea-wrapper">
                     <textarea id="message" name="message" placeholder="Type your message here..." required
+                        aria-describedby="shortcut-hint{% if char_limit %} char-count{% endif %}"
                         {% if char_limit %}maxlength="{{ char_limit }}" oninput="document.getElementById('char-count').innerText = this.value.length + '/{{ char_limit }}'"{% endif %}
                     >{{ submitted_message or '' }}</textarea>
                     <div class="textarea-footer">
-                        <span>Press <strong>Ctrl+Enter</strong> to send</span>
+                        <span id="shortcut-hint">Press <strong>Ctrl+Enter</strong> to send</span>
                         {% if char_limit %}
                         <span id="char-count">{{ submitted_message|length if submitted_message else 0 }}/{{ char_limit }}</span>
                         {% endif %}
