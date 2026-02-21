@@ -575,8 +575,8 @@ def index():
                 if r.status_code == 200:
                     status = {
                         'code': 'PRINT_SUCCESS',
-                        'title': 'Message Sent',
-                        'message': 'Message queued',
+                        'title': 'Success',
+                        'message': 'Message sent to printer.',
                         'type': 'success'
                     }
                     log_to_firestore(ip, "SUCCESS", msg)
