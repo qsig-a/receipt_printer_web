@@ -120,7 +120,8 @@ class TestApp(unittest.TestCase):
         mock_db.collection.return_value.limit.return_value.select.return_value.stream.return_value = mock_docs
 
         response = self.client.post('/clear-history', data={'admin_password': 'adminsecret'})
-        self.assertEqual(response.status_code, 302) # Redirects to index
+        self.assertEqual(response.status_code, 200) # Renders history
+        self.assertIn(b"Print History", response.data)
 
         # Verify select([]) was called
         mock_db.collection.return_value.limit.return_value.select.assert_called_with([])
