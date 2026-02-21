@@ -121,7 +121,7 @@ textarea { resize: none; min-height: 120px; font-family: monospace; width: 100%;
     width: 100%; padding: 0.75rem; color: white; border: none; 
     border-radius: 8px; font-weight: 600; cursor: pointer;
     transition: all 0.2s; margin-top: 1.5rem; text-decoration: none; display: block;
-    box-sizing: border-box;
+    box-sizing: border-box; font-size: 1rem; font-family: inherit;
 }
 .btn-primary { background-color: var(--primary); }
 .btn-primary:hover { background-color: var(--primary-hover); }
