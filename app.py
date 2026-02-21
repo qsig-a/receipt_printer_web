@@ -156,6 +156,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--primary); box-s
 .badge-err { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 .admin-actions { display: flex; gap: 10px; margin-top: 2rem; }
 .admin-actions form { flex: 1; }
+.admin-actions .btn { margin-top: 0; }
 .input-group { margin-top: 1rem; text-align: left; }
 .textarea-wrapper { position: relative; }
 .textarea-footer {
@@ -327,7 +328,7 @@ HISTORY_HTML = """
             </form>
             <form method="POST" action="/clear-history" onsubmit="return confirm('Permanently delete all logs?');">
                 <input type="hidden" name="admin_password" value="{{ admin_pw }}">
-                <button type="submit" class="btn btn-danger" style="margin-top:0;">Clear History</button>
+                <button type="submit" class="btn btn-danger">Clear History</button>
             </form>
         </div>
         <a href="/" class="btn btn-secondary">Back to Portal</a>
@@ -626,14 +627,15 @@ def download_csv():
 
 @app.route('/clear-history', methods=['POST'])
 def clear_history():
-    if request.form.get('admin_password') == ADMIN_PASSWORD:
+    admin_pw = request.form.get('admin_password')
+    if admin_pw == ADMIN_PASSWORD:
         # Delete documents in batches (standard Firestore pattern)
         docs = db.collection(COLLECTION_NAME).limit(500).select([]).stream()
         batch = db.batch()
         for doc in docs:
             batch.delete(doc.reference)
         batch.commit()
-        return redirect(url_for('index'))
+        return render_template_string(HISTORY_HTML, authorized=True, logs=[], admin_pw=admin_pw)
     return "Unauthorized", 401
 
 @app.route('/sms', methods=['POST'])
