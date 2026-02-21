@@ -132,11 +132,19 @@ textarea { resize: none; min-height: 120px; font-family: monospace; width: 100%;
 input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
 .status-box {
     margin-top: 1.5rem; padding: 1rem; background: var(--input-bg);
-    border-left: 4px solid #10b981; border-radius: 4px;
-    font-family: 'Courier New', monospace; font-size: 0.85rem; text-align: left;
-    color: var(--text);
+    border-left: 4px solid #10b981; border-radius: 8px;
+    text-align: left; color: var(--text);
+}
+.status-title {
+    font-weight: 600; font-size: 0.95rem; margin-bottom: 0.25rem;
+}
+.status-message {
+    font-size: 0.9rem; color: var(--text-muted);
 }
 .status-error { border-left-color: #ef4444; }
+.status-error .status-title { color: #ef4444; }
+.status-success { border-left-color: #10b981; }
+.status-success .status-title { color: #10b981; }
 .history-table {
     width: 100%; border-collapse: collapse; margin-top: 1.5rem;
     background: var(--card-bg); border-radius: 12px; overflow: hidden; font-size: 0.85rem;
@@ -202,7 +210,12 @@ INDEX_HTML = """
             </div>
             <button type="submit" class="btn btn-primary">Print Now</button>
         </form>
-        {% if status %}<div role="alert" class="status-box {% if '❌' in status %}status-error{% endif %}">{{ status }}</div>{% endif %}
+        {% if status %}
+        <div role="alert" class="status-box status-{{ status.type }}" data-code="{{ status.code }}">
+            <div class="status-title">{{ status.title }}</div>
+            <div class="status-message">{{ status.message }}</div>
+        </div>
+        {% endif %}
     </div>
     <script>
         document.querySelector('form').addEventListener('submit', function(e) {
@@ -228,12 +241,12 @@ INDEX_HTML = """
         document.addEventListener('DOMContentLoaded', () => {
             const statusBox = document.querySelector('.status-box');
             if (statusBox) {
-                const text = statusBox.innerText;
-                if (text.includes('ACCESS_DENIED')) {
+                const code = statusBox.getAttribute('data-code');
+                if (code === 'ACCESS_DENIED') {
                     const el = document.getElementById('password');
                     el.focus();
                     el.classList.add('input-error');
-                } else if (text.includes('LIMIT_EXCEEDED')) {
+                } else if (code === 'LIMIT_EXCEEDED') {
                     const el = document.getElementById('message');
                     el.focus();
                     el.classList.add('input-error');
@@ -541,23 +554,48 @@ def index():
         ip = request.headers.get('X-Forwarded-For', request.remote_addr)
 
         if user_pw != ACCESS_PASSWORD:
-            status = "❌ ACCESS_DENIED: Invalid Keycode"
+            status = {
+                'code': 'ACCESS_DENIED',
+                'title': 'Access Denied',
+                'message': 'Invalid Keycode',
+                'type': 'error'
+            }
             log_to_firestore(ip, "DENIED", msg)
         elif CHARACTER_LIMIT and msg and len(msg) > CHARACTER_LIMIT:
-            status = f"❌ LIMIT_EXCEEDED: Message too long ({len(msg)}/{CHARACTER_LIMIT})"
+            status = {
+                'code': 'LIMIT_EXCEEDED',
+                'title': 'Limit Exceeded',
+                'message': f'Message too long ({len(msg)}/{CHARACTER_LIMIT})',
+                'type': 'error'
+            }
             log_to_firestore(ip, "LIMIT_EXCEEDED", msg)
         else:
             try:
                 r = requests.post(WEBHOOK_URL, json={"message": msg}, timeout=10)
                 if r.status_code == 200:
-                    status = "✅ PRINT_SUCCESS: Message queued"
+                    status = {
+                        'code': 'PRINT_SUCCESS',
+                        'title': 'Success',
+                        'message': 'Message sent to printer.',
+                        'type': 'success'
+                    }
                     log_to_firestore(ip, "SUCCESS", msg)
                     submitted_message = ""
                 else:
-                    status = f"❌ HA_ERR: {r.status_code}"
+                    status = {
+                        'code': 'HA_ERR',
+                        'title': 'Printer Error',
+                        'message': f'Error: {r.status_code}',
+                        'type': 'error'
+                    }
                     log_to_firestore(ip, f"HA_ERR_{r.status_code}", msg)
             except Exception as e:
-                status = f"❌ CONN_FAIL: {str(e)}"
+                status = {
+                    'code': 'CONN_FAIL',
+                    'title': 'Connection Failed',
+                    'message': str(e),
+                    'type': 'error'
+                }
                 log_to_firestore(ip, "CONN_FAIL", str(e))
     return render_template_string(INDEX_HTML, status=status, char_limit=CHARACTER_LIMIT, submitted_message=submitted_message)
 
