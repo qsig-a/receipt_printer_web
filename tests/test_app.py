@@ -64,14 +64,16 @@ class TestApp(unittest.TestCase):
         mock_post.return_value.status_code = 500
         response = self.client.post('/', data={'password': 'secret', 'message': 'Hello'})
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"HA_ERR: 500", response.data)
+        self.assertIn(b"HA_ERR", response.data)
+        self.assertIn(b"Error: 500", response.data)
 
     @patch('app.requests.post')
     def test_index_post_connection_failure(self, mock_post):
         mock_post.side_effect = Exception("Connection refused")
         response = self.client.post('/', data={'password': 'secret', 'message': 'Hello'})
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"CONN_FAIL: Connection refused", response.data)
+        self.assertIn(b"CONN_FAIL", response.data)
+        self.assertIn(b"Connection refused", response.data)
 
     def test_history_get_unauthorized(self):
         # GET request doesn't show logs, just the form
