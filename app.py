@@ -161,6 +161,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--primary); box-s
     font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; transition: all 0.2s;
 }
 .copy-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+.input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important; }
 """
 
 INDEX_HTML = """
@@ -223,6 +224,26 @@ INDEX_HTML = """
         textarea.addEventListener('input', autoResize);
         // Initial resize in case of pre-filled content
         autoResize();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusBox = document.querySelector('.status-box');
+            if (statusBox) {
+                const text = statusBox.innerText;
+                if (text.includes('ACCESS_DENIED')) {
+                    const el = document.getElementById('password');
+                    el.focus();
+                    el.classList.add('input-error');
+                } else if (text.includes('LIMIT_EXCEEDED')) {
+                    const el = document.getElementById('message');
+                    el.focus();
+                    el.classList.add('input-error');
+                }
+            } else {
+                // Focus password on fresh load if empty
+                const pw = document.getElementById('password');
+                if (!pw.value) pw.focus();
+            }
+        });
 
         function togglePassword(btn) {
             const input = document.getElementById('password');
