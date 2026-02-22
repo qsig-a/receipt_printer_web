@@ -173,12 +173,46 @@ input:focus, textarea:focus { outline: none; border-color: var(--primary); box-s
 .input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important; }
 """
 
+SHARED_JS = """
+function togglePassword(btn, inputId) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = '🙈';
+        btn.setAttribute('aria-label', 'Hide password');
+        btn.style.color = 'var(--text)';
+    } else {
+        input.type = 'password';
+        btn.innerHTML = '👁️';
+        btn.setAttribute('aria-label', 'Show password');
+        btn.style.color = 'var(--text-muted)';
+    }
+}
+
+function copyToClipboard(btn) {
+    const text = btn.previousElementSibling.innerText;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            const original = btn.innerText;
+            btn.innerText = '✅';
+            setTimeout(() => btn.innerText = original, 1500);
+        }).catch(err => {
+            console.error('Failed to copy', err);
+            btn.innerText = '❌';
+        });
+    } else {
+        alert("Copy not supported (secure context required).");
+    }
+}
+"""
+
 INDEX_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>""" + SHARED_CSS + """</style>
+    <script>""" + SHARED_JS + """</script>
 </head>
 <body>
     <div class="container">
@@ -189,7 +223,7 @@ INDEX_HTML = """
                 <label for="password">Access Key</label>
                 <div style="position: relative;">
                     <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password" style="padding-right: 40px;">
-                    <button type="button" aria-label="Show password" onclick="togglePassword(this)" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
+                    <button type="button" aria-label="Show password" onclick="togglePassword(this, 'password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
                         👁️
                     </button>
                 </div>
@@ -259,20 +293,6 @@ INDEX_HTML = """
             }
         });
 
-        function togglePassword(btn) {
-            const input = document.getElementById('password');
-            if (input.type === 'password') {
-                input.type = 'text';
-                btn.innerHTML = '🙈';
-                btn.setAttribute('aria-label', 'Hide password');
-                btn.style.color = 'var(--text)';
-            } else {
-                input.type = 'password';
-                btn.innerHTML = '👁️';
-                btn.setAttribute('aria-label', 'Show password');
-                btn.style.color = 'var(--text-muted)';
-            }
-        }
     </script>
 </body>
 </html>
@@ -284,6 +304,7 @@ HISTORY_HTML = """
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>""" + SHARED_CSS + """</style>
+    <script>""" + SHARED_JS + """</script>
 </head>
 <body>
     <div class="container" style="max-width: 900px;">
@@ -291,7 +312,12 @@ HISTORY_HTML = """
         {% if not authorized %}
         <form method="POST">
             <label for="admin_password">Admin Access</label>
-            <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required>
+            <div style="position: relative;">
+                <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required style="padding-right: 40px;">
+                <button type="button" aria-label="Show password" onclick="togglePassword(this, 'admin_password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
+                    👁️
+                </button>
+            </div>
             <button type="submit" class="btn btn-primary">View Logs</button>
         </form>
         {% else %}
@@ -334,23 +360,6 @@ HISTORY_HTML = """
         <a href="/" class="btn btn-secondary">Back to Portal</a>
         {% endif %}
     </div>
-    <script>
-        function copyToClipboard(btn) {
-            const text = btn.previousElementSibling.innerText;
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).then(() => {
-                    const original = btn.innerText;
-                    btn.innerText = '✅';
-                    setTimeout(() => btn.innerText = original, 1500);
-                }).catch(err => {
-                    console.error('Failed to copy', err);
-                    btn.innerText = '❌';
-                });
-            } else {
-                alert("Copy not supported (secure context required).");
-            }
-        }
-    </script>
 </body>
 </html>
 """

@@ -60,12 +60,12 @@ class TestUXEnhancement(unittest.TestCase):
         self.assertIn('style="padding-right: 40px;"', html)
 
         # Check for the toggle button
-        self.assertIn('onclick="togglePassword(this)"', html)
+        self.assertIn('onclick="togglePassword(this, \'password\')"', html)
         self.assertIn('aria-label="Show password"', html)
         self.assertIn('👁️', html)
 
         # Check for the JS function
-        self.assertIn('function togglePassword(btn)', html)
+        self.assertIn('function togglePassword(btn, inputId)', html)
 
     def test_textarea_resize_behavior(self):
         """Verify the textarea resize behavior in CSS and auto-resize JS."""
@@ -80,6 +80,17 @@ class TestUXEnhancement(unittest.TestCase):
         # Check for JS changes
         self.assertIn('const autoResize = () => {', html)
         self.assertIn('textarea.addEventListener(\'input\', autoResize);', html)
+
+    def test_admin_password_toggle_exists(self):
+        """Verify that the admin password toggle button exists in the History HTML."""
+        response = self.client.get('/history')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+
+        # Check for the toggle button which is unique by its onclick handler
+        self.assertIn("togglePassword(this, 'admin_password')", html)
+        self.assertIn('aria-label="Show password"', html)
+        self.assertIn('👁️', html)
 
 if __name__ == '__main__':
     unittest.main()
