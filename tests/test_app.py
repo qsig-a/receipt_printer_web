@@ -90,7 +90,7 @@ class TestApp(unittest.TestCase):
 
     @patch('app.get_logs_from_firestore')
     def test_history_post_authorized(self, mock_get_logs):
-        mock_get_logs.return_value = [{'time': '2023-01-01', 'source': '1.2.3.4', 'status': 'SUCCESS', 'msg': 'Test'}]
+        mock_get_logs.return_value = [{'time': '2023-01-01', 'source': '1.2.3.4', 'status': 'SUCCESS', 'msg': 'Test', 'iso_time': '2023-01-01T00:00:00'}]
         response = self.client.post('/history', data={'admin_password': 'adminsecret'})
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Test", response.data)
@@ -102,7 +102,7 @@ class TestApp(unittest.TestCase):
 
     @patch('app.get_logs_from_firestore')
     def test_download_csv_authorized(self, mock_get_logs):
-        mock_get_logs.return_value = [{'time': '2023-01-01', 'source': '1.2.3.4', 'status': 'SUCCESS', 'msg': 'Test'}]
+        mock_get_logs.return_value = [{'time': '2023-01-01', 'source': '1.2.3.4', 'status': 'SUCCESS', 'msg': 'Test', 'iso_time': '2023-01-01T00:00:00'}]
         response = self.client.post('/download-csv', data={'admin_password': 'adminsecret'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Disposition'], 'attachment; filename=history.csv')

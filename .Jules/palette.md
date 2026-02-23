@@ -25,3 +25,7 @@
 ## 2025-05-27 - Context for Textareas
 **Learning:** Screen reader users miss helpful context (like shortcuts and limits) when it's just visual text near the input.
 **Action:** Use `aria-describedby` to programmatically link helper text and character counters to the input they describe.
+
+## 2025-05-28 - Localized Timestamps for Admin Views
+**Learning:** Server-side timestamps (UTC) in logs force users to do mental math, increasing cognitive load during debugging.
+**Action:** Render timestamps as ISO strings in `data` attributes and use `Intl.DateTimeFormat` on the client side to display them in the user's local timezone.

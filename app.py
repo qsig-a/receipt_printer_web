@@ -170,6 +170,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--primary); box-s
     font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; transition: all 0.2s;
 }
 .copy-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+.copy-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
 .input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important; }
 """
 
@@ -329,7 +330,7 @@ HISTORY_HTML = """
                 <tbody>
                     {% for log in logs %}
                     <tr>
-                        <td style="white-space: nowrap; color: var(--text-muted);">{{ log.time }}</td>
+                        <td style="white-space: nowrap; color: var(--text-muted);"><span class="local-time" data-iso="{{ log.iso_time }}">{{ log.time }}</span></td>
                         <td style="font-family: monospace;">{{ log.source }}</td>
                         <td><span class="badge {% if log.status == 'SUCCESS' %}badge-ok{% else %}badge-err{% endif %}">{{ log.status }}</span></td>
                         <td class="msg-cell">
@@ -360,6 +361,22 @@ HISTORY_HTML = """
         <a href="/" class="btn btn-secondary">Back to Portal</a>
         {% endif %}
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.local-time').forEach(el => {
+                const iso = el.getAttribute('data-iso');
+                if (iso) {
+                    const date = new Date(iso);
+                    if (!isNaN(date.getTime())) {
+                        el.textContent = date.toLocaleString(undefined, {
+                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                        });
+                        el.title = date.toLocaleString();
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
 """
@@ -407,7 +424,8 @@ def get_logs_from_firestore():
             'time': time_str,
             'source': source,
             'status': data.get('status', 'ERROR'),
-            'msg': data.get('message', '')
+            'msg': data.get('message', ''),
+            'iso_time': ts.isoformat() if ts else ''
         })
     return logs
 
