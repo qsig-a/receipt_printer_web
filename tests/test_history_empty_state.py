@@ -31,7 +31,7 @@ class TestHistoryEmptyState(unittest.TestCase):
     @patch('app.ADMIN_PASSWORD', 'adminsecret')
     def test_history_with_logs(self, mock_get_logs):
         # Case: Logs exist
-        mock_get_logs.return_value = [{'time': 'Now', 'source': 'IP', 'status': 'OK', 'msg': 'Hi'}]
+        mock_get_logs.return_value = [{'time': 'Now', 'source': 'IP', 'status': 'OK', 'msg': 'Hi', 'iso_time': '2025-01-01T12:00:00'}]
         response = self.client.post('/history', data={'admin_password': 'adminsecret'})
         self.assertEqual(response.status_code, 200)
         content = response.data.decode('utf-8')
