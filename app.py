@@ -326,6 +326,12 @@ HISTORY_HTML = """
     <div class="container" style="max-width: 900px;">
         <h2>Print History 📜</h2>
         {% if not authorized %}
+        {% if error %}
+        <div role="alert" class="status-box status-error" style="margin-bottom: 1.5rem; margin-top: 0;">
+            <div class="status-title">Access Denied</div>
+            <div class="status-message">{{ error }}</div>
+        </div>
+        {% endif %}
         <form method="POST">
             <label for="admin_password">Admin Access</label>
             <div style="position: relative;">
@@ -378,6 +384,14 @@ HISTORY_HTML = """
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            {% if error %}
+            const pwInput = document.getElementById('admin_password');
+            if (pwInput) {
+                pwInput.focus();
+                pwInput.classList.add('input-error');
+            }
+            {% endif %}
+
             document.querySelectorAll('.local-time').forEach(el => {
                 const iso = el.getAttribute('data-iso');
                 if (iso) {
@@ -646,13 +660,18 @@ def index():
 def history():
     authorized = False
     logs = []
+    error = None
     admin_pw = request.form.get('admin_password', '')
-    if request.method == 'POST' and admin_pw == ADMIN_PASSWORD:
-        authorized = True
-        logs = get_logs_from_firestore()
-    elif request.method == 'POST':
-        return "Unauthorized", 401
-    return render_template_string(HISTORY_HTML, authorized=authorized, logs=logs, admin_pw=admin_pw)
+
+    if request.method == 'POST':
+        if admin_pw == ADMIN_PASSWORD:
+            authorized = True
+            logs = get_logs_from_firestore()
+        else:
+            error = "Invalid admin password"
+
+    status_code = 401 if error else 200
+    return render_template_string(HISTORY_HTML, authorized=authorized, logs=logs, admin_pw=admin_pw, error=error), status_code
 
 @app.route('/download-csv', methods=['POST'])
 def download_csv():

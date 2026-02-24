@@ -86,7 +86,7 @@ class TestApp(unittest.TestCase):
     def test_history_post_unauthorized(self):
         response = self.client.post('/history', data={'admin_password': 'wrong'})
         self.assertEqual(response.status_code, 401)
-        self.assertIn(b"Unauthorized", response.data)
+        self.assertIn(b"Invalid admin password", response.data)
 
     @patch('app.get_logs_from_firestore')
     def test_history_post_authorized(self, mock_get_logs):

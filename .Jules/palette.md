@@ -29,3 +29,7 @@
 ## 2025-05-28 - Localized Timestamps for Admin Views
 **Learning:** Server-side timestamps (UTC) in logs force users to do mental math, increasing cognitive load during debugging.
 **Action:** Render timestamps as ISO strings in `data` attributes and use `Intl.DateTimeFormat` on the client side to display them in the user's local timezone.
+
+## 2026-02-24 - Avoid Dead Ends on Auth Failure
+**Learning:** Returning a raw "Unauthorized" text response (401) on a failed form submission is a poor user experience as it forces the user to navigate back manually.
+**Action:** Always re-render the form with an inline error message while preserving the 401 status code, so the user can immediately correct their mistake.
