@@ -397,13 +397,25 @@ HISTORY_HTML = """
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            {% if error %}
             const pwInput = document.getElementById('admin_password');
             if (pwInput) {
                 pwInput.focus();
+                {% if error %}
                 pwInput.classList.add('input-error');
+                {% endif %}
             }
-            {% endif %}
+
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    if (this.action.includes('download-csv')) return;
+                    if (e.defaultPrevented) return;
+                    const btn = this.querySelector('button[type="submit"]');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = btn.classList.contains('btn-danger') ? "Clearing... ⏳" : "Verifying... ⏳";
+                    }
+                });
+            });
 
             document.querySelectorAll('.local-time').forEach(el => {
                 const iso = el.getAttribute('data-iso');

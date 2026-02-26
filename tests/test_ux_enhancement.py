@@ -92,5 +92,21 @@ class TestUXEnhancement(unittest.TestCase):
         self.assertIn('aria-label="Show password"', html)
         self.assertIn('👁️', html)
 
+    def test_history_page_ux(self):
+        """Verify UX enhancements on the History page."""
+        response = self.client.get('/history')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+
+        # Check for auto-focus on admin password input
+        self.assertIn("const pwInput = document.getElementById('admin_password');", html)
+        self.assertIn("pwInput.focus();", html)
+
+        # Check for form submission loading state logic
+        self.assertIn("document.querySelectorAll('form').forEach(form => {", html)
+        self.assertIn("form.addEventListener('submit', function(e) {", html)
+        self.assertIn("if (this.action.includes('download-csv')) return;", html)
+        self.assertIn("Verifying... ⏳", html)
+
 if __name__ == '__main__':
     unittest.main()
