@@ -171,7 +171,20 @@ input:focus, textarea:focus { outline: none; border-color: var(--primary); box-s
 }
 .copy-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
 .copy-btn:hover { opacity: 1; background: rgba(255,255,255,0.1); }
-.input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important; }
+.input-error {
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .input-error {
+        animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+}
 """
 
 SHARED_JS = """
