@@ -625,6 +625,29 @@ def is_number_whitelisted(number):
 
 # --- Routes ---
 
+ERROR_404_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Page Not Found</title>
+    <style>""" + SHARED_CSS + """</style>
+</head>
+<body>
+    <div class="container">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">🤷‍♂️</div>
+        <h2>Page Not Found</h2>
+        <p>The page you are looking for doesn't exist or has been moved.</p>
+        <a href="/" class="btn btn-primary">Return Home</a>
+    </div>
+</body>
+</html>
+"""
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template_string(ERROR_404_HTML), 404
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     status = None

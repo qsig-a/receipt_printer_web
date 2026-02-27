@@ -33,3 +33,7 @@
 ## 2026-02-24 - Avoid Dead Ends on Auth Failure
 **Learning:** Returning a raw "Unauthorized" text response (401) on a failed form submission is a poor user experience as it forces the user to navigate back manually.
 **Action:** Always re-render the form with an inline error message while preserving the 401 status code, so the user can immediately correct their mistake.
+
+## 2026-03-01 - Friendly 404 Pages
+**Learning:** Default server 404 pages are jarring and offer no path forward, leaving users stranded.
+**Action:** Create a custom 404 template that matches the application's design language and provides a clear "Return Home" action to keep users within the flow.
