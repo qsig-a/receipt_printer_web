@@ -37,3 +37,7 @@
 ## 2026-03-01 - Friendly 404 Pages
 **Learning:** Default server 404 pages are jarring and offer no path forward, leaving users stranded.
 **Action:** Create a custom 404 template that matches the application's design language and provides a clear "Return Home" action to keep users within the flow.
+
+## 2026-03-02 - Page Titles and Language Attributes in Embedded Templates
+**Learning:** Missing language attributes (`lang="en"`) and descriptive `<title>` tags in embedded HTML templates hinder screen reader access and general usability.
+**Action:** Ensure all root `<html>` elements in embedded templates have correct `lang` attributes and descriptive `<title>` tags to properly inform users and assistive tech of the page's purpose and language.
