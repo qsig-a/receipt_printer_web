@@ -130,6 +130,7 @@ textarea { resize: none; min-height: 120px; font-family: monospace; width: 100%;
 .btn-secondary { background-color: var(--border); color: var(--text); }
 .btn-secondary:hover { background-color: #6b7280; }
 input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
+button:focus-visible, a:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
 .status-box {
     margin-top: 1.5rem; padding: 1rem; background: var(--input-bg);
     border-left: 4px solid #10b981; border-radius: 8px;

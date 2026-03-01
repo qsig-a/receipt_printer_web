@@ -37,3 +37,7 @@
 ## 2026-03-01 - Friendly 404 Pages
 **Learning:** Default server 404 pages are jarring and offer no path forward, leaving users stranded.
 **Action:** Create a custom 404 template that matches the application's design language and provides a clear "Return Home" action to keep users within the flow.
+
+## 2026-03-05 - Focus Visible for Keyboard Navigation
+**Learning:** In a dark theme, default browser focus rings on buttons and links often lack sufficient contrast, making keyboard navigation difficult.
+**Action:** Always add custom `:focus-visible` styles (e.g., using box-shadows) for interactive elements that match the design language and provide clear, high-contrast feedback.
