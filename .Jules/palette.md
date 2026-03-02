@@ -37,3 +37,7 @@
 ## 2026-03-01 - Friendly 404 Pages
 **Learning:** Default server 404 pages are jarring and offer no path forward, leaving users stranded.
 **Action:** Create a custom 404 template that matches the application's design language and provides a clear "Return Home" action to keep users within the flow.
+
+## 2025-03-02 - Keyboard Navigation Visibility
+**Learning:** Without explicit `:focus-visible` styles, users relying on keyboard navigation may have difficulty identifying the currently focused button or link.
+**Action:** Always include a distinct focus indicator, such as an `outline` or `box-shadow`, for interactive elements like buttons and links when they receive focus via keyboard navigation.
