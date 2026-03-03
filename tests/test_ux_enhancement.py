@@ -108,5 +108,15 @@ class TestUXEnhancement(unittest.TestCase):
         self.assertIn("if (this.action.includes('download-csv')) return;", html)
         self.assertIn("Verifying... ⏳", html)
 
+    def test_focus_visible_styles_present(self):
+        """Verify that :focus-visible styles are defined in CSS for keyboard accessibility."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+
+        # Check for the specific CSS rule we added
+        self.assertIn('button:focus-visible, a:focus-visible', html)
+        self.assertIn('box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5)', html)
+
 if __name__ == '__main__':
     unittest.main()
