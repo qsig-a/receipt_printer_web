@@ -770,7 +770,7 @@ def sms_webhook():
 
     if is_whitelisted:
         if CHARACTER_LIMIT and len(body) > CHARACTER_LIMIT:
-            send_sms(from_number, f"❌ Message too long. Limit is {CHARACTER_LIMIT} characters.")
+            executor.submit(send_sms, from_number, f"❌ Message too long. Limit is {CHARACTER_LIMIT} characters.")
             return "OK"
 
         executor.submit(process_sms_async, from_number, WEBHOOK_URL, body)
@@ -782,7 +782,7 @@ def sms_webhook():
 
     if not pending_doc.exists:
         if CHARACTER_LIMIT and len(body) > CHARACTER_LIMIT:
-            send_sms(from_number, f"❌ Message too long. Limit is {CHARACTER_LIMIT} characters.")
+            executor.submit(send_sms, from_number, f"❌ Message too long. Limit is {CHARACTER_LIMIT} characters.")
             return "OK"
 
         # New message -> Store it and ask for password
@@ -790,7 +790,7 @@ def sms_webhook():
             'message': body,
             'timestamp': firestore.SERVER_TIMESTAMP
         })
-        send_sms(from_number, "Please reply with the access password to print your message.")
+        executor.submit(send_sms, from_number, "Please reply with the access password to print your message.")
         return "OK" # SignalWire expects 200 OK
     else:
         # Pending message exists -> This is the password attempt
@@ -807,7 +807,7 @@ def sms_webhook():
         else:
             # Password incorrect
             log_to_firestore(from_number, "DENIED", original_message)
-            send_sms(from_number, "❌ Invalid password. Access denied.")
+            executor.submit(send_sms, from_number, "❌ Invalid password. Access denied.")
             # Delete pending state to enforce "Send Message -> Send Password" flow.
             # If they fail password, they start over. This prevents stuck states.
             pending_ref.delete()
