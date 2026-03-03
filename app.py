@@ -125,8 +125,9 @@ textarea { resize: none; min-height: 120px; font-family: monospace; width: 100%;
 }
 .btn-primary { background-color: var(--primary); }
 .btn-primary:hover { background-color: var(--primary-hover); }
-.btn-primary:disabled { background-color: var(--border); cursor: not-allowed; color: var(--text-muted); }
+.btn:disabled { background-color: var(--border); cursor: not-allowed; color: var(--text-muted); }
 .btn-danger { background-color: var(--danger); margin-top: 2rem; }
+.btn-danger:hover { background-color: var(--danger-hover); }
 .btn-secondary { background-color: var(--border); color: var(--text); }
 .btn-secondary:hover { background-color: #6b7280; }
 input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }

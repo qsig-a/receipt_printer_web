@@ -118,5 +118,17 @@ class TestUXEnhancement(unittest.TestCase):
         self.assertIn('button:focus-visible, a:focus-visible', html)
         self.assertIn('box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5)', html)
 
+    def test_button_hover_and_disabled_styles(self):
+        """Verify that danger buttons have hover states and disabled states apply universally."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+
+        # Check for danger button hover state
+        self.assertIn('.btn-danger:hover { background-color: var(--danger-hover); }', html)
+
+        # Check for universal disabled button state
+        self.assertIn('.btn:disabled { background-color: var(--border); cursor: not-allowed; color: var(--text-muted); }', html)
+
 if __name__ == '__main__':
     unittest.main()
