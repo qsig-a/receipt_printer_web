@@ -543,6 +543,17 @@ def check_slack_rate_limit(user_id):
     })
     return True, None
 
+def process_print_async(ip, webhook_url, msg):
+    """Async handler for index page print commands to prevent timeouts."""
+    try:
+        r = requests.post(webhook_url, json={"message": msg}, timeout=10)
+        if r.status_code == 200:
+            log_to_firestore(ip, "SUCCESS", msg)
+        else:
+            log_to_firestore(ip, f"HA_ERR_{r.status_code}", msg)
+    except Exception as e:
+        log_to_firestore(ip, "CONN_FAIL", str(e))
+
 def process_slack_async(response_url, webhook_url, text, source):
     """Async handler for Slack commands to prevent timeouts."""
     try:
@@ -678,33 +689,14 @@ def index():
             }
             executor.submit(log_to_firestore, ip, "LIMIT_EXCEEDED", msg)
         else:
-            try:
-                r = requests.post(WEBHOOK_URL, json={"message": msg}, timeout=10)
-                if r.status_code == 200:
-                    status = {
-                        'code': 'PRINT_SUCCESS',
-                        'title': 'Success',
-                        'message': 'Message sent to printer.',
-                        'type': 'success'
-                    }
-                    executor.submit(log_to_firestore, ip, "SUCCESS", msg)
-                    submitted_message = ""
-                else:
-                    status = {
-                        'code': 'HA_ERR',
-                        'title': 'Printer Error',
-                        'message': f'Error: {r.status_code}',
-                        'type': 'error'
-                    }
-                    executor.submit(log_to_firestore, ip, f"HA_ERR_{r.status_code}", msg)
-            except Exception as e:
-                status = {
-                    'code': 'CONN_FAIL',
-                    'title': 'Connection Failed',
-                    'message': str(e),
-                    'type': 'error'
-                }
-                executor.submit(log_to_firestore, ip, "CONN_FAIL", str(e))
+            status = {
+                'code': 'PRINT_SUCCESS',
+                'title': 'Success',
+                'message': 'Message sent to printer.',
+                'type': 'success'
+            }
+            executor.submit(process_print_async, ip, WEBHOOK_URL, msg)
+            submitted_message = ""
     return render_template_string(INDEX_HTML, status=status, char_limit=CHARACTER_LIMIT, submitted_message=submitted_message)
 
 @app.route('/history', methods=['GET', 'POST'])

@@ -26,10 +26,19 @@ class TestApp(unittest.TestCase):
             patch('app.ADMIN_PASSWORD', 'adminsecret'),
             patch('app.WEBHOOK_URL', 'http://fake-printer'),
             patch('app.CHARACTER_LIMIT', 100),
-            patch('app.log_to_firestore', MagicMock())
+            patch('app.log_to_firestore', MagicMock()),
+            patch('app.executor')
         ]
+        self.started_patchers = []
         for p in self.patchers:
-            p.start()
+            started = p.start()
+            self.started_patchers.append(started)
+
+        # Configure Executor mock to run immediately
+        mock_executor = self.started_patchers[-1]
+        def run_immediately(fn, *args, **kwargs):
+            return fn(*args, **kwargs)
+        mock_executor.submit.side_effect = run_immediately
 
     def tearDown(self):
         for p in self.patchers:
@@ -64,16 +73,24 @@ class TestApp(unittest.TestCase):
         mock_post.return_value.status_code = 500
         response = self.client.post('/', data={'password': 'secret', 'message': 'Hello'})
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"HA_ERR", response.data)
-        self.assertIn(b"Error: 500", response.data)
+        # UI should indicate success (message queued)
+        self.assertIn(b"PRINT_SUCCESS", response.data)
+
+        # Verify background log
+        mock_log = self.started_patchers[-2] # app.log_to_firestore is second to last
+        mock_log.assert_called_with('127.0.0.1', 'HA_ERR_500', 'Hello')
 
     @patch('app.requests.post')
     def test_index_post_connection_failure(self, mock_post):
         mock_post.side_effect = Exception("Connection refused")
         response = self.client.post('/', data={'password': 'secret', 'message': 'Hello'})
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"CONN_FAIL", response.data)
-        self.assertIn(b"Connection refused", response.data)
+        # UI should indicate success (message queued)
+        self.assertIn(b"PRINT_SUCCESS", response.data)
+
+        # Verify background log
+        mock_log = self.started_patchers[-2]
+        mock_log.assert_called_with('127.0.0.1', 'CONN_FAIL', 'Connection refused')
 
     def test_history_get_unauthorized(self):
         # GET request doesn't show logs, just the form
