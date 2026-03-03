@@ -117,7 +117,8 @@ class TestApp(unittest.TestCase):
         # Mock batch deletion
         mock_docs = [MagicMock(), MagicMock()]
         # Mock the chain: db.collection().limit().select([]).stream()
-        mock_db.collection.return_value.limit.return_value.select.return_value.stream.return_value = mock_docs
+        # It's called in a loop, so we return docs the first time, then empty the second time
+        mock_db.collection.return_value.limit.return_value.select.return_value.stream.side_effect = [mock_docs, []]
 
         response = self.client.post('/clear-history', data={'admin_password': 'adminsecret'})
         self.assertEqual(response.status_code, 200) # Renders history
