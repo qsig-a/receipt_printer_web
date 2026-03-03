@@ -742,11 +742,16 @@ def clear_history():
     admin_pw = request.form.get('admin_password')
     if admin_pw == ADMIN_PASSWORD:
         # Delete documents in batches (standard Firestore pattern)
-        docs = db.collection(COLLECTION_NAME).limit(500).select([]).stream()
-        batch = db.batch()
-        for doc in docs:
-            batch.delete(doc.reference)
-        batch.commit()
+        while True:
+            docs = db.collection(COLLECTION_NAME).limit(500).select([]).stream()
+            batch = db.batch()
+            doc_count = 0
+            for doc in docs:
+                batch.delete(doc.reference)
+                doc_count += 1
+            if doc_count == 0:
+                break
+            batch.commit()
         return render_template_string(HISTORY_HTML, authorized=True, logs=[], admin_pw=admin_pw)
     return "Unauthorized", 401
 
