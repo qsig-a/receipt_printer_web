@@ -668,7 +668,7 @@ def index():
                 'message': 'Invalid Keycode',
                 'type': 'error'
             }
-            log_to_firestore(ip, "DENIED", msg)
+            executor.submit(log_to_firestore, ip, "DENIED", msg)
         elif CHARACTER_LIMIT and msg and len(msg) > CHARACTER_LIMIT:
             status = {
                 'code': 'LIMIT_EXCEEDED',
@@ -676,7 +676,7 @@ def index():
                 'message': f'Message too long ({len(msg)}/{CHARACTER_LIMIT})',
                 'type': 'error'
             }
-            log_to_firestore(ip, "LIMIT_EXCEEDED", msg)
+            executor.submit(log_to_firestore, ip, "LIMIT_EXCEEDED", msg)
         else:
             try:
                 r = requests.post(WEBHOOK_URL, json={"message": msg}, timeout=10)
@@ -687,7 +687,7 @@ def index():
                         'message': 'Message sent to printer.',
                         'type': 'success'
                     }
-                    log_to_firestore(ip, "SUCCESS", msg)
+                    executor.submit(log_to_firestore, ip, "SUCCESS", msg)
                     submitted_message = ""
                 else:
                     status = {
@@ -696,7 +696,7 @@ def index():
                         'message': f'Error: {r.status_code}',
                         'type': 'error'
                     }
-                    log_to_firestore(ip, f"HA_ERR_{r.status_code}", msg)
+                    executor.submit(log_to_firestore, ip, f"HA_ERR_{r.status_code}", msg)
             except Exception as e:
                 status = {
                     'code': 'CONN_FAIL',
@@ -704,7 +704,7 @@ def index():
                     'message': str(e),
                     'type': 'error'
                 }
-                log_to_firestore(ip, "CONN_FAIL", str(e))
+                executor.submit(log_to_firestore, ip, "CONN_FAIL", str(e))
     return render_template_string(INDEX_HTML, status=status, char_limit=CHARACTER_LIMIT, submitted_message=submitted_message)
 
 @app.route('/history', methods=['GET', 'POST'])
