@@ -223,9 +223,10 @@ function copyToClipboard(btn) {
 
 INDEX_HTML = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Remote Print</title>
     <style>""" + SHARED_CSS + """</style>
     <script>""" + SHARED_JS + """</script>
 </head>
@@ -330,9 +331,10 @@ INDEX_HTML = """
 
 HISTORY_HTML = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Print History</title>
     <style>""" + SHARED_CSS + """</style>
     <script>""" + SHARED_JS + """</script>
 </head>
@@ -628,7 +630,7 @@ def is_number_whitelisted(number):
 
 ERROR_404_HTML = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Page Not Found</title>

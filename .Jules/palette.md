@@ -41,3 +41,7 @@
 ## 2026-03-05 - Focus Visible for Keyboard Navigation
 **Learning:** In a dark theme, default browser focus rings on buttons and links often lack sufficient contrast, making keyboard navigation difficult.
 **Action:** Always add custom `:focus-visible` styles (e.g., using box-shadows) for interactive elements that match the design language and provide clear, high-contrast feedback.
+
+## 2026-03-02 - Page Titles and Language Attributes in Embedded Templates
+**Learning:** Missing language attributes (`lang="en"`) and descriptive `<title>` tags in embedded HTML templates hinder screen reader access and general usability.
+**Action:** Ensure all root `<html>` elements in embedded templates have correct `lang` attributes and descriptive `<title>` tags to properly inform users and assistive tech of the page's purpose and language.
