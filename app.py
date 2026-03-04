@@ -521,10 +521,10 @@ def check_slack_rate_limit(user_id):
     cutoff = now - timedelta(minutes=SLACK_LIMIT_PERIOD)
 
     recent_timestamps = [
-        t for t in (
+        t for t in [
             t.replace(tzinfo=timezone.utc) if t.tzinfo is None else t
             for t in timestamps
-        )
+        ]
         if t > cutoff
     ]
 
