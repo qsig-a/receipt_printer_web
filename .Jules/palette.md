@@ -49,3 +49,7 @@
 ## 2026-03-02 - Page Titles and Language Attributes in Embedded Templates
 **Learning:** Missing language attributes (`lang="en"`) and descriptive `<title>` tags in embedded HTML templates hinder screen reader access and general usability.
 **Action:** Ensure all root `<html>` elements in embedded templates have correct `lang` attributes and descriptive `<title>` tags to properly inform users and assistive tech of the page's purpose and language.
+
+## 2026-03-06 - Visual Required Field Indicators
+**Learning:** Users may not know which fields are mandatory until they submit the form and receive an error, causing frustration and a feeling of "error-after-submit".
+**Action:** Always add visual indicators, such as a high-contrast asterisk (`<span aria-hidden="true">*</span>`), to the labels of required form fields to clearly indicate constraints upfront.

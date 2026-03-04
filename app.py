@@ -237,7 +237,7 @@ INDEX_HTML = """
         <p>Send a message directly to my desk.</p>
         <form method="POST">
             <div class="input-group">
-                <label for="password">Access Key</label>
+                <label for="password">Access Key<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
                 <div style="position: relative;">
                     <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password" style="padding-right: 40px;">
                     <button type="button" aria-label="Show password" onclick="togglePassword(this, 'password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
@@ -246,7 +246,7 @@ INDEX_HTML = """
                 </div>
             </div>
             <div class="input-group">
-                <label for="message">Message</label>
+                <label for="message">Message<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
                 <div class="textarea-wrapper">
                     <textarea id="message" name="message" placeholder="Type your message here..." required
                         aria-describedby="shortcut-hint{% if char_limit %} char-count{% endif %}"
@@ -350,7 +350,7 @@ HISTORY_HTML = """
         </div>
         {% endif %}
         <form method="POST">
-            <label for="admin_password">Admin Access</label>
+            <label for="admin_password">Admin Access<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
             <div style="position: relative;">
                 <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required style="padding-right: 40px;">
                 <button type="button" aria-label="Show password" onclick="togglePassword(this, 'admin_password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
