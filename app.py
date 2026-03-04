@@ -720,13 +720,23 @@ def history():
 @app.route('/download-csv', methods=['POST'])
 def download_csv():
     if request.form.get('admin_password') == ADMIN_PASSWORD:
-        logs = get_logs_from_firestore()
-        si = io.StringIO()
-        cw = csv.writer(si)
-        cw.writerow(['Time', 'Source', 'Status', 'Message'])
-        for log in logs:
-            cw.writerow([log['time'], log['source'], log['status'], log['msg']])
-        return Response(si.getvalue(), mimetype="text/csv", 
+        def generate():
+            si = io.StringIO()
+            cw = csv.writer(si)
+
+            cw.writerow(['Time', 'Source', 'Status', 'Message'])
+            yield si.getvalue()
+            si.truncate(0)
+            si.seek(0)
+
+            logs = get_logs_from_firestore()
+            for log in logs:
+                cw.writerow([log['time'], log['source'], log['status'], log['msg']])
+                yield si.getvalue()
+                si.truncate(0)
+                si.seek(0)
+
+        return Response(generate(), mimetype="text/csv",
                         headers={"Content-disposition": "attachment; filename=history.csv"})
     return "Unauthorized", 401
 
