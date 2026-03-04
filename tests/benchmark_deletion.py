@@ -11,7 +11,7 @@ sys.modules['signalwire.rest'] = MagicMock()
 
 from app import app, db
 
-def run_benchmark(docs_count, chunk_size, use_loop=True, use_bulk=False):
+def run_benchmark(docs_count, chunk_size, use_bulk=False):
     # Setup mock document references
     mock_docs = [MagicMock() for _ in range(docs_count)]
 
@@ -82,28 +82,17 @@ def run_benchmark(docs_count, chunk_size, use_loop=True, use_bulk=False):
 
     # Simulate the code that would be in clear_history
     if not use_bulk:
-        if use_loop:
-            # The proposed `while` loop implementation
-            while True:
-                docs = db_mock.collection("collection").limit(chunk_size).select([]).stream()
-                batch = db_mock.batch()
-                doc_count = 0
-                for doc in docs:
-                    batch.delete(doc.reference)
-                    doc_count += 1
-                if doc_count == 0:
-                    break
-                batch.commit()
-        else:
-            # The current buggy implementation (only runs once)
+        # The corrected `while` loop implementation (standard Firestore pattern)
+        while True:
             docs = db_mock.collection("collection").limit(chunk_size).select([]).stream()
             batch = db_mock.batch()
             doc_count = 0
             for doc in docs:
                 batch.delete(doc.reference)
                 doc_count += 1
-            if doc_count > 0:
-                batch.commit()
+            if doc_count == 0:
+                break
+            batch.commit()
     else:
         # Optimization: using BulkWriter
         docs = db_mock.collection("collection").select([]).stream()
@@ -131,22 +120,15 @@ if __name__ == '__main__':
 
     print(f"Benchmarking deletion of {DOCS} documents...")
 
-    # 1. Current
-    res1 = run_benchmark(DOCS, CHUNK, use_loop=False)
-    print(f"\n1. Current (No Loop) - INCOMPLETE DELETION")
+    # 1. Standard While Loop (Batch)
+    res1 = run_benchmark(DOCS, CHUNK)
+    print(f"\n1. Standard While Loop (Batch)")
     print(f"  Time: {res1['duration']:.4f}s")
     print(f"  Deleted: {res1['docs_deleted']}/{res1['docs_intended']}")
     print(f"  Network Calls: {res1['network_calls']}")
+    print(f"  Batches: {res1['batches_committed']}")
 
-    # 2. While Loop
-    res2 = run_benchmark(DOCS, CHUNK, use_loop=True)
-    print(f"\n2. Simple While Loop (Batch)")
-    print(f"  Time: {res2['duration']:.4f}s")
-    print(f"  Deleted: {res2['docs_deleted']}/{res2['docs_intended']}")
-    print(f"  Network Calls: {res2['network_calls']}")
-    print(f"  Batches: {res2['batches_committed']}")
-
-    # 3. Bulk Writer
+    # 2. Bulk Writer
     # res3 = run_benchmark(DOCS, CHUNK, use_bulk=True)
     # print(f"\n3. Bulk Writer API (Optimized)")
     # print(f"  Time: {res3['duration']:.4f}s")
