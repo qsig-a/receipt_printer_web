@@ -220,6 +220,15 @@ function copyToClipboard(btn) {
         alert("Copy not supported (secure context required).");
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('input, textarea').forEach(el => {
+        el.addEventListener('input', function() {
+            this.classList.remove('input-error');
+            this.removeAttribute('aria-invalid');
+        });
+    });
+});
 """
 
 INDEX_HTML = """
@@ -239,7 +248,7 @@ INDEX_HTML = """
             <div class="input-group">
                 <label for="password">Access Key<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
                 <div style="position: relative;">
-                    <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password" style="padding-right: 40px;">
+                    <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password" style="padding-right: 40px;" {% if status and status.code == 'ACCESS_DENIED' %}aria-invalid="true"{% endif %}>
                     <button type="button" aria-label="Show password" onclick="togglePassword(this, 'password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
                         👁️
                     </button>
@@ -250,6 +259,7 @@ INDEX_HTML = """
                 <div class="textarea-wrapper">
                     <textarea id="message" name="message" placeholder="Type your message here..." required
                         aria-describedby="shortcut-hint{% if char_limit %} char-count{% endif %}"
+                        {% if status and status.code == 'LIMIT_EXCEEDED' %}aria-invalid="true"{% endif %}
                         {% if char_limit %}maxlength="{{ char_limit }}" oninput="document.getElementById('char-count').innerText = this.value.length + '/{{ char_limit }}'"{% endif %}
                     >{{ submitted_message or '' }}</textarea>
                     <div class="textarea-footer">
@@ -352,7 +362,7 @@ HISTORY_HTML = """
         <form method="POST">
             <label for="admin_password">Admin Access<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
             <div style="position: relative;">
-                <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required style="padding-right: 40px;">
+                <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required style="padding-right: 40px;" {% if error %}aria-invalid="true"{% endif %}>
                 <button type="button" aria-label="Show password" onclick="togglePassword(this, 'admin_password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
                     👁️
                 </button>

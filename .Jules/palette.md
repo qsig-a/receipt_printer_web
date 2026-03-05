@@ -53,3 +53,7 @@
 ## 2026-03-06 - Visual Required Field Indicators
 **Learning:** Users may not know which fields are mandatory until they submit the form and receive an error, causing frustration and a feeling of "error-after-submit".
 **Action:** Always add visual indicators, such as a high-contrast asterisk (`<span aria-hidden="true">*</span>`), to the labels of required form fields to clearly indicate constraints upfront.
+
+## 2026-03-05 - Clearing Validation States on Input
+**Learning:** Persisting error styles (like red borders and `aria-invalid=\true\`) on inputs *after* the user begins typing to correct their mistake creates a frustrating, accusatory UX.
+**Action:** Always add explicit JavaScript event listeners to form fields to clear validation styles (`.input-error`) and accessibility attributes (`aria-invalid`) immediately upon the `input` event. Additionally, ensure server-side errors render with `aria-invalid=\true\`.
