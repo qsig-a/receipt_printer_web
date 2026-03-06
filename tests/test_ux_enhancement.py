@@ -130,5 +130,35 @@ class TestUXEnhancement(unittest.TestCase):
         # Check for universal disabled button state
         self.assertIn('.btn:disabled { background-color: var(--border); cursor: not-allowed; color: var(--text-muted); }', html)
 
+    def test_os_aware_keyboard_shortcut_logic(self):
+        """Verify that OS-aware keyboard shortcut logic exists in SHARED_JS."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+
+        self.assertIn("navigator.userAgent.toLowerCase().includes('mac')", html)
+        self.assertIn("⌘ Cmd+Enter", html)
+
+    def test_semantic_landmarks(self):
+        """Verify that semantic <main> tags are used instead of <div class='container'>."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+        self.assertIn('<main class="container">', html)
+        self.assertNotIn('<div class="container">', html)
+
+        response = self.client.get('/history')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+        self.assertIn('<main class="container" style="max-width: 900px;">', html)
+        self.assertNotIn('<div class="container" style="max-width: 900px;">', html)
+
+    def test_admin_password_autocomplete(self):
+        """Verify that the admin password field has the autocomplete attribute."""
+        response = self.client.get('/history')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+        self.assertIn('autocomplete="current-password"', html)
+
 if __name__ == '__main__':
     unittest.main()

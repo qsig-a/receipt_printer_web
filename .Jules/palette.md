@@ -57,3 +57,7 @@
 ## 2026-03-05 - Clearing Validation States on Input
 **Learning:** Persisting error styles (like red borders and `aria-invalid=\true\`) on inputs *after* the user begins typing to correct their mistake creates a frustrating, accusatory UX.
 **Action:** Always add explicit JavaScript event listeners to form fields to clear validation styles (`.input-error`) and accessibility attributes (`aria-invalid`) immediately upon the `input` event. Additionally, ensure server-side errors render with `aria-invalid=\true\`.
+
+## 2026-03-07 - OS-Aware Guidance and Semantic Landmarks
+**Learning:** Generic keyboard hints (like "Ctrl+Enter") cause cognitive friction for Mac users, and generic layout divs (`<div class="container">`) hinder screen reader navigation by failing to define structural landmarks.
+**Action:** Always use semantic HTML5 elements (like `<main>`) for core content areas to provide explicit navigation landmarks, and utilize `navigator.userAgent` to dynamically adapt UI text (like shortcut keys) to the user's specific operating system for a more intuitive experience.

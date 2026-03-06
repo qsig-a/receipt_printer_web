@@ -228,6 +228,12 @@ document.addEventListener('DOMContentLoaded', () => {
             this.removeAttribute('aria-invalid');
         });
     });
+
+    // OS-aware keyboard shortcut hint
+    const hint = document.getElementById('shortcut-hint');
+    if (hint && navigator.userAgent.toLowerCase().includes('mac')) {
+        hint.innerHTML = 'Press <strong>⌘ Cmd+Enter</strong> to send';
+    }
 });
 """
 
@@ -241,7 +247,7 @@ INDEX_HTML = """
     <script>""" + SHARED_JS + """</script>
 </head>
 <body>
-    <div class="container">
+    <main class="container">
         <h2>Remote Print 📠</h2>
         <p>Send a message directly to my desk.</p>
         <form method="POST">
@@ -278,7 +284,7 @@ INDEX_HTML = """
             <div class="status-message">{{ status.message }}</div>
         </div>
         {% endif %}
-    </div>
+    </main>
     <script>
         (function() {
             const title = document.querySelector('h2');
@@ -350,7 +356,7 @@ HISTORY_HTML = """
     <script>""" + SHARED_JS + """</script>
 </head>
 <body>
-    <div class="container" style="max-width: 900px;">
+    <main class="container" style="max-width: 900px;">
         <h2>Print History 📜</h2>
         {% if not authorized %}
         {% if error %}
@@ -362,7 +368,7 @@ HISTORY_HTML = """
         <form method="POST">
             <label for="admin_password">Admin Access<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
             <div style="position: relative;">
-                <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required style="padding-right: 40px;" {% if error %}aria-invalid="true"{% endif %}>
+                <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required autocomplete="current-password" style="padding-right: 40px;" {% if error %}aria-invalid="true"{% endif %}>
                 <button type="button" aria-label="Show password" onclick="togglePassword(this, 'admin_password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
                     👁️
                 </button>
@@ -408,7 +414,7 @@ HISTORY_HTML = """
         </div>
         <a href="/" class="btn btn-secondary">Back to Portal</a>
         {% endif %}
-    </div>
+    </main>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const pwInput = document.getElementById('admin_password');
@@ -659,12 +665,12 @@ ERROR_404_HTML = """
     <style>""" + SHARED_CSS + """</style>
 </head>
 <body>
-    <div class="container">
+    <main class="container">
         <div style="font-size: 4rem; margin-bottom: 1rem;">🤷‍♂️</div>
         <h2>Page Not Found</h2>
         <p>The page you are looking for doesn't exist or has been moved.</p>
         <a href="/" class="btn btn-primary">Return Home</a>
-    </div>
+    </main>
 </body>
 </html>
 """
