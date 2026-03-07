@@ -165,6 +165,16 @@ button:focus-visible, a:focus-visible { outline: none; box-shadow: 0 0 0 3px rgb
     display: flex; justify-content: space-between; align-items: center;
     margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);
 }
+kbd {
+    background-color: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1rem 0.3rem;
+    font-family: monospace;
+    font-size: 0.85em;
+    box-shadow: 0 2px 0 var(--border);
+    color: var(--text);
+}
 .msg-cell { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .msg-content { word-break: break-all; }
 .copy-btn {
@@ -232,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // OS-aware keyboard shortcut hint
     const hint = document.getElementById('shortcut-hint');
     if (hint && navigator.userAgent.toLowerCase().includes('mac')) {
-        hint.innerHTML = 'Press <strong>⌘ Cmd+Enter</strong> to send';
+        hint.innerHTML = 'Press <kbd>⌘ Cmd</kbd> + <kbd>Enter</kbd> to send';
     }
 });
 """
@@ -269,7 +279,7 @@ INDEX_HTML = """
                         {% if char_limit %}maxlength="{{ char_limit }}" oninput="document.getElementById('char-count').innerText = this.value.length + '/{{ char_limit }}'"{% endif %}
                     >{{ submitted_message or '' }}</textarea>
                     <div class="textarea-footer">
-                        <span id="shortcut-hint">Press <strong>Ctrl+Enter</strong> to send</span>
+                        <span id="shortcut-hint">Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to send</span>
                         {% if char_limit %}
                         <span id="char-count">{{ submitted_message|length if submitted_message else 0 }}/{{ char_limit }}</span>
                         {% endif %}

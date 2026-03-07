@@ -26,7 +26,7 @@ class TestKeyboardShortcut(unittest.TestCase):
         self.assertIn('autocomplete="current-password"', content, "Password field missing autocomplete attribute")
 
         # Check for helper text
-        self.assertIn('Press <strong>Ctrl+Enter</strong> to send', content, "Helper text missing")
+        self.assertIn('Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to send', content, "Helper text missing")
 
         # Check for JS keydown listener
         self.assertIn("addEventListener('keydown'", content, "Keydown listener missing")
