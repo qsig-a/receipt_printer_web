@@ -137,7 +137,7 @@ class TestUXEnhancement(unittest.TestCase):
         html = response.data.decode('utf-8')
 
         self.assertIn("navigator.userAgent.toLowerCase().includes('mac')", html)
-        self.assertIn("⌘ Cmd+Enter", html)
+        self.assertIn("<kbd>⌘ Cmd</kbd> + <kbd>Enter</kbd>", html)
 
     def test_semantic_landmarks(self):
         """Verify that semantic <main> tags are used instead of <div class='container'>."""

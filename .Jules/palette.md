@@ -61,3 +61,7 @@
 ## 2026-03-07 - OS-Aware Guidance and Semantic Landmarks
 **Learning:** Generic keyboard hints (like "Ctrl+Enter") cause cognitive friction for Mac users, and generic layout divs (`<div class="container">`) hinder screen reader navigation by failing to define structural landmarks.
 **Action:** Always use semantic HTML5 elements (like `<main>`) for core content areas to provide explicit navigation landmarks, and utilize `navigator.userAgent` to dynamically adapt UI text (like shortcut keys) to the user's specific operating system for a more intuitive experience.
+
+## 2026-03-08 - Semantic Keyboard Shortcuts
+**Learning:** Using generic `<strong>` or `<span>` tags for keyboard shortcuts misses an opportunity for semantic markup and visual clarity. Screen readers can better interpret `<kbd>` tags, and they can be styled to look like physical keys, enhancing the UI.
+**Action:** Always use the `<kbd>` HTML element for indicating keyboard input or shortcuts, and apply distinct CSS styling (like borders and box-shadows) to make them visually resemble physical keys.
