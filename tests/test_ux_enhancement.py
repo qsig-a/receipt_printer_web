@@ -62,10 +62,13 @@ class TestUXEnhancement(unittest.TestCase):
         # Check for the toggle button
         self.assertIn('onclick="togglePassword(this, \'password\')"', html)
         self.assertIn('aria-label="Show password"', html)
+        self.assertIn('title="Show password"', html)
         self.assertIn('👁️', html)
 
         # Check for the JS function
         self.assertIn('function togglePassword(btn, inputId)', html)
+        self.assertIn("btn.setAttribute('title', 'Hide password')", html)
+        self.assertIn("btn.setAttribute('title', 'Show password')", html)
 
     def test_textarea_resize_behavior(self):
         """Verify the textarea resize behavior in CSS and auto-resize JS."""
@@ -90,6 +93,7 @@ class TestUXEnhancement(unittest.TestCase):
         # Check for the toggle button which is unique by its onclick handler
         self.assertIn("togglePassword(this, 'admin_password')", html)
         self.assertIn('aria-label="Show password"', html)
+        self.assertIn('title="Show password"', html)
         self.assertIn('👁️', html)
 
     def test_history_page_ux(self):

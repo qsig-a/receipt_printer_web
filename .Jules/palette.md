@@ -65,3 +65,7 @@
 ## 2026-03-08 - Semantic Keyboard Shortcuts
 **Learning:** Using generic `<strong>` or `<span>` tags for keyboard shortcuts misses an opportunity for semantic markup and visual clarity. Screen readers can better interpret `<kbd>` tags, and they can be styled to look like physical keys, enhancing the UI.
 **Action:** Always use the `<kbd>` HTML element for indicating keyboard input or shortcuts, and apply distinct CSS styling (like borders and box-shadows) to make them visually resemble physical keys.
+
+## 2026-03-08 - Hover Context for Icon Buttons
+**Learning:** Icon-only buttons with `aria-label` are accessible to screen readers, but sighted mouse users relying on hover miss out on the context, leading to ambiguity.
+**Action:** Always provide a `title` attribute alongside `aria-label` on icon-only buttons to ensure hover tooltips appear, providing explicit guidance for mouse users.
