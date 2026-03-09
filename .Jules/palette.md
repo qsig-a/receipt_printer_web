@@ -69,3 +69,7 @@
 ## 2026-03-08 - Hover Context for Icon Buttons
 **Learning:** Icon-only buttons with `aria-label` are accessible to screen readers, but sighted mouse users relying on hover miss out on the context, leading to ambiguity.
 **Action:** Always provide a `title` attribute alongside `aria-label` on icon-only buttons to ensure hover tooltips appear, providing explicit guidance for mouse users.
+
+## 2026-03-09 - Disabled States for Empty Data Actions
+**Learning:** When data tables are empty, destructive or export actions (like "Clear" or "Download") can be confusing if left active, potentially leading to invalid server requests.
+**Action:** Always disable action buttons when the related dataset is empty, and provide clear explanations via tooltips (`title` attribute) and `aria-disabled="true"` to inform users why the action is unavailable.

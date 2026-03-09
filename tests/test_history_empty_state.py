@@ -27,6 +27,10 @@ class TestHistoryEmptyState(unittest.TestCase):
         self.assertIn('No print history found', content)
         self.assertIn('📭', content)
 
+        # Verify buttons are disabled
+        self.assertIn('disabled title="No logs to download"', content)
+        self.assertIn('disabled title="No logs to clear"', content)
+
     @patch('app.get_logs_from_firestore')
     @patch('app.ADMIN_PASSWORD', 'adminsecret')
     def test_history_with_logs(self, mock_get_logs):
@@ -40,6 +44,10 @@ class TestHistoryEmptyState(unittest.TestCase):
         self.assertNotIn('No print history found', content)
         # Verify log content is present
         self.assertIn('Hi', content)
+
+        # Verify buttons are NOT disabled
+        self.assertNotIn('disabled title="No logs to download"', content)
+        self.assertNotIn('disabled title="No logs to clear"', content)
 
 if __name__ == '__main__':
     unittest.main()
