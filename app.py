@@ -417,11 +417,11 @@ HISTORY_HTML = """
         <div class="admin-actions">
             <form method="POST" action="/download-csv">
                 <input type="hidden" name="admin_password" value="{{ admin_pw }}">
-                <button type="submit" class="btn btn-primary">Download CSV</button>
+                <button type="submit" class="btn btn-primary" {% if not logs %}disabled title="No logs to download"{% endif %}>Download CSV</button>
             </form>
             <form method="POST" action="/clear-history" onsubmit="return confirm('Permanently delete all logs?');">
                 <input type="hidden" name="admin_password" value="{{ admin_pw }}">
-                <button type="submit" class="btn btn-danger">Clear History</button>
+                <button type="submit" class="btn btn-danger" {% if not logs %}disabled title="No logs to clear"{% endif %}>Clear History</button>
             </form>
         </div>
         <a href="/" class="btn btn-secondary">Back to Portal</a>
