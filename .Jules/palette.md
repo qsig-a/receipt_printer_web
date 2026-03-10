@@ -73,3 +73,7 @@
 ## 2026-03-09 - Disabled States for Empty Data Actions
 **Learning:** When data tables are empty, destructive or export actions (like "Clear" or "Download") can be confusing if left active, potentially leading to invalid server requests.
 **Action:** Always disable action buttons when the related dataset is empty, and provide clear explanations via tooltips (`title` attribute) and `aria-disabled="true"` to inform users why the action is unavailable.
+
+## 2026-03-10 - Scrollable Table Accessibility
+**Learning:** Tables that scroll vertically hide their column headers, confusing users. Furthermore, if a table container is scrollable, keyboard-only users cannot scroll it without `tabindex="0"`.
+**Action:** Always make table headers sticky (`position: sticky; top: 0; z-index: 10;`) and wrap scrollable tables in a container with `tabindex="0"`, `role="region"`, and a descriptive `aria-label` to ensure they are fully navigable by keyboard and screen reader users. Also provide a custom `:focus-visible` outline for the container to highlight it when focused.
