@@ -131,7 +131,7 @@ textarea { resize: none; min-height: 120px; font-family: monospace; width: 100%;
 .btn-secondary { background-color: var(--border); color: var(--text); }
 .btn-secondary:hover { background-color: #6b7280; }
 input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
-button:focus-visible, a:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+button:focus-visible, a:focus-visible, [role="region"]:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
 .status-box {
     margin-top: 1.5rem; padding: 1rem; background: var(--input-bg);
     border-left: 4px solid #10b981; border-radius: 8px;
@@ -151,7 +151,7 @@ button:focus-visible, a:focus-visible { outline: none; box-shadow: 0 0 0 3px rgb
     width: 100%; border-collapse: collapse; margin-top: 1.5rem;
     background: var(--card-bg); border-radius: 12px; overflow: hidden; font-size: 0.85rem;
 }
-.history-table th { background: #111827; padding: 12px; text-align: left; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.history-table th { background: #111827; padding: 12px; text-align: left; color: var(--text-muted); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
 .history-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; color: var(--text); }
 .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
 .badge-ok { background: rgba(16, 185, 129, 0.2); color: #34d399; }
@@ -388,7 +388,7 @@ HISTORY_HTML = """
             <button type="submit" class="btn btn-primary">View Logs</button>
         </form>
         {% else %}
-        <div style="max-height: 500px; overflow-y: auto;">
+        <div style="max-height: 500px; overflow-y: auto;" tabindex="0" role="region" aria-label="Print history">
             <table class="history-table">
                 <thead>
                     <tr><th>Time</th><th>Source</th><th>Status</th><th>Message</th></tr>

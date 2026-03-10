@@ -164,5 +164,26 @@ class TestUXEnhancement(unittest.TestCase):
         html = response.data.decode('utf-8')
         self.assertIn('autocomplete="current-password"', html)
 
+
+    def test_scrollable_table_ux(self):
+        """Verify that scrollable tables have sticky headers and accessibility attributes."""
+        # Check history HTML structure by simulating login
+        from app import ADMIN_PASSWORD
+        response = self.client.post('/history', data={'admin_password': ADMIN_PASSWORD})
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+
+        # Check for sticky th
+        self.assertIn('position: sticky; top: 0; z-index: 10;', html)
+
+        # Check for role region and tabindex
+        self.assertIn('role="region"', html)
+        self.assertIn('tabindex="0"', html)
+        self.assertIn('aria-label="Print history"', html)
+
+        # Check for :focus-visible style for [role="region"]
+        self.assertIn('[role="region"]:focus-visible', html)
+
 if __name__ == '__main__':
+
     unittest.main()
