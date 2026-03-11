@@ -77,3 +77,15 @@
 ## 2026-03-10 - Scrollable Table Accessibility
 **Learning:** Tables that scroll vertically hide their column headers, confusing users. Furthermore, if a table container is scrollable, keyboard-only users cannot scroll it without `tabindex="0"`.
 **Action:** Always make table headers sticky (`position: sticky; top: 0; z-index: 10;`) and wrap scrollable tables in a container with `tabindex="0"`, `role="region"`, and a descriptive `aria-label` to ensure they are fully navigable by keyboard and screen reader users. Also provide a custom `:focus-visible` outline for the container to highlight it when focused.
+
+## 2026-03-11 - Explicit Error Associations
+**Learning:** Relying solely on visual cues (like a red border) and `aria-invalid="true"` is insufficient for screen reader users to understand *why* an input is invalid if the error message is disconnected from the input in the DOM.
+**Action:** Always use `aria-errormessage` on the invalid input, pointing to the `id` of the element containing the explicit error message, to provide clear, actionable feedback to screen reader users. Ensure this attribute is cleared simultaneously with `aria-invalid` when the user begins typing.
+
+## 2026-03-11 - Accessible Copy Feedback
+**Learning:** Changing an emoji in a copy-to-clipboard button (e.g., from 📋 to ✅) provides excellent visual feedback for sighted users, but offers absolutely no context to screen reader users about the outcome of the action.
+**Action:** When updating a button's visual state to indicate success, concurrently update its `aria-label` and `title` attributes (e.g., to "Copied!") for the duration of the feedback state, ensuring equitable access to status updates.
+
+## 2026-03-11 - Hiding Decorative Emojis
+**Learning:** Using inline emojis for visual flair in headings or empty states can create jarring experiences for screen reader users, as the emojis are often read out with long, literal descriptions (e.g., "Remote Print fax machine").
+**Action:** Wrap purely decorative emojis in a `<span aria-hidden="true">` to hide them from assistive technologies while preserving the visual design for sighted users.

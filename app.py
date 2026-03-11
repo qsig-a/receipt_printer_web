@@ -219,14 +219,33 @@ function togglePassword(btn, inputId) {
 
 function copyToClipboard(btn) {
     const text = btn.previousElementSibling.innerText;
+    const originalLabel = btn.getAttribute('aria-label');
+    const originalTitle = btn.getAttribute('title');
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(() => {
             const original = btn.innerText;
             btn.innerText = '✅';
-            setTimeout(() => btn.innerText = original, 1500);
+            btn.setAttribute('aria-label', 'Copied!');
+            btn.setAttribute('title', 'Copied!');
+            setTimeout(() => {
+                btn.innerText = original;
+                if (originalLabel) btn.setAttribute('aria-label', originalLabel);
+                else btn.removeAttribute('aria-label');
+                if (originalTitle) btn.setAttribute('title', originalTitle);
+                else btn.removeAttribute('title');
+            }, 1500);
         }).catch(err => {
             console.error('Failed to copy', err);
             btn.innerText = '❌';
+            btn.setAttribute('aria-label', 'Failed to copy');
+            btn.setAttribute('title', 'Failed to copy');
+            setTimeout(() => {
+                btn.innerText = original;
+                if (originalLabel) btn.setAttribute('aria-label', originalLabel);
+                else btn.removeAttribute('aria-label');
+                if (originalTitle) btn.setAttribute('title', originalTitle);
+                else btn.removeAttribute('title');
+            }, 1500);
         });
     } else {
         alert("Copy not supported (secure context required).");
@@ -238,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         el.addEventListener('input', function() {
             this.classList.remove('input-error');
             this.removeAttribute('aria-invalid');
+            this.removeAttribute('aria-errormessage');
         });
     });
 
@@ -260,13 +280,13 @@ INDEX_HTML = """
 </head>
 <body>
     <main class="container">
-        <h2>Remote Print 📠</h2>
+        <h2>Remote Print <span aria-hidden="true">📠</span></h2>
         <p>Send a message directly to my desk.</p>
         <form method="POST">
             <div class="input-group">
                 <label for="password">Access Key<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
                 <div style="position: relative;">
-                    <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password" style="padding-right: 40px;" {% if status and status.code == 'ACCESS_DENIED' %}aria-invalid="true"{% endif %}>
+                    <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password" style="padding-right: 40px;" {% if status and status.code == 'ACCESS_DENIED' %}aria-invalid="true" aria-errormessage="status-feedback"{% endif %}>
                     <button type="button" aria-label="Show password" title="Show password" onclick="togglePassword(this, 'password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
                         👁️
                     </button>
@@ -277,7 +297,7 @@ INDEX_HTML = """
                 <div class="textarea-wrapper">
                     <textarea id="message" name="message" placeholder="Type your message here..." required
                         aria-describedby="shortcut-hint{% if char_limit %} char-count{% endif %}"
-                        {% if status and status.code == 'LIMIT_EXCEEDED' %}aria-invalid="true"{% endif %}
+                        {% if status and status.code == 'LIMIT_EXCEEDED' %}aria-invalid="true" aria-errormessage="status-feedback"{% endif %}
                         {% if char_limit %}maxlength="{{ char_limit }}" oninput="document.getElementById('char-count').innerText = this.value.length + '/{{ char_limit }}'"{% endif %}
                     >{{ submitted_message or '' }}</textarea>
                     <div class="textarea-footer">
@@ -291,7 +311,7 @@ INDEX_HTML = """
             <button type="submit" class="btn btn-primary">Print Now</button>
         </form>
         {% if status %}
-        <div role="alert" class="status-box status-{{ status.type }}" data-code="{{ status.code }}">
+        <div role="alert" id="status-feedback" class="status-box status-{{ status.type }}" data-code="{{ status.code }}">
             <div class="status-title">{{ status.title }}</div>
             <div class="status-message">{{ status.message }}</div>
         </div>
@@ -369,10 +389,10 @@ HISTORY_HTML = """
 </head>
 <body>
     <main class="container" style="max-width: 900px;">
-        <h2>Print History 📜</h2>
+        <h2>Print History <span aria-hidden="true">📜</span></h2>
         {% if not authorized %}
         {% if error %}
-        <div role="alert" class="status-box status-error" style="margin-bottom: 1.5rem; margin-top: 0;">
+        <div role="alert" id="status-feedback" class="status-box status-error" style="margin-bottom: 1.5rem; margin-top: 0;">
             <div class="status-title">Access Denied</div>
             <div class="status-message">{{ error }}</div>
         </div>
@@ -380,7 +400,7 @@ HISTORY_HTML = """
         <form method="POST">
             <label for="admin_password">Admin Access<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
             <div style="position: relative;">
-                <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required autocomplete="current-password" style="padding-right: 40px;" {% if error %}aria-invalid="true"{% endif %}>
+                <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required autocomplete="current-password" style="padding-right: 40px;" {% if error %}aria-invalid="true" aria-errormessage="status-feedback"{% endif %}>
                 <button type="button" aria-label="Show password" title="Show password" onclick="togglePassword(this, 'admin_password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
                     👁️
                 </button>
@@ -407,7 +427,7 @@ HISTORY_HTML = """
                     {% else %}
                     <tr>
                         <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                            No print history found 📭
+                            No print history found <span aria-hidden="true">📭</span>
                         </td>
                     </tr>
                     {% endfor %}
@@ -678,7 +698,7 @@ ERROR_404_HTML = """
 </head>
 <body>
     <main class="container">
-        <div style="font-size: 4rem; margin-bottom: 1rem;">🤷‍♂️</div>
+        <div style="font-size: 4rem; margin-bottom: 1rem;" aria-hidden="true">🤷‍♂️</div>
         <h2>Page Not Found</h2>
         <p>The page you are looking for doesn't exist or has been moved.</p>
         <a href="/" class="btn btn-primary">Return Home</a>

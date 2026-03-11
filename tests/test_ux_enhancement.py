@@ -184,6 +184,16 @@ class TestUXEnhancement(unittest.TestCase):
         # Check for :focus-visible style for [role="region"]
         self.assertIn('[role="region"]:focus-visible', html)
 
+    def test_decorative_emoji_hidden(self):
+        """Verify that decorative emojis are hidden from screen readers."""
+        response = self.client.get('/')
+        html = response.data.decode('utf-8')
+        self.assertIn('<span aria-hidden="true">📠</span>', html)
+
+        response = self.client.get('/history')
+        html = response.data.decode('utf-8')
+        self.assertIn('<span aria-hidden="true">📜</span>', html)
+
 if __name__ == '__main__':
 
     unittest.main()

@@ -20,6 +20,7 @@ class TestValidationStates(unittest.TestCase):
         html = response.data.decode('utf-8')
 
         self.assertIn('aria-invalid="true"', html)
+        self.assertIn('aria-errormessage="status-feedback"', html)
 
     @patch('app.CHARACTER_LIMIT', 5)
     def test_aria_invalid_on_limit_exceeded(self):
@@ -28,6 +29,7 @@ class TestValidationStates(unittest.TestCase):
         html = response.data.decode('utf-8')
 
         self.assertIn('aria-invalid="true"', html)
+        self.assertIn('aria-errormessage="status-feedback"', html)
 
     def test_aria_invalid_on_admin_error(self):
         response = self.client.post('/history', data={'admin_password': 'wrong'})
@@ -35,6 +37,7 @@ class TestValidationStates(unittest.TestCase):
         html = response.data.decode('utf-8')
 
         self.assertIn('aria-invalid="true"', html)
+        self.assertIn('aria-errormessage="status-feedback"', html)
 
     def test_js_listener_exists(self):
         response = self.client.get('/')
@@ -42,6 +45,7 @@ class TestValidationStates(unittest.TestCase):
 
         self.assertIn("this.classList.remove('input-error');", html)
         self.assertIn("this.removeAttribute('aria-invalid');", html)
+        self.assertIn("this.removeAttribute('aria-errormessage');", html)
 
 if __name__ == '__main__':
     unittest.main()
