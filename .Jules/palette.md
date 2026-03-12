@@ -89,3 +89,7 @@
 ## 2026-03-11 - Hiding Decorative Emojis
 **Learning:** Using inline emojis for visual flair in headings or empty states can create jarring experiences for screen reader users, as the emojis are often read out with long, literal descriptions (e.g., "Remote Print fax machine").
 **Action:** Wrap purely decorative emojis in a `<span aria-hidden="true">` to hide them from assistive technologies while preserving the visual design for sighted users.
+
+## 2026-03-12 - Auth Failure Dead End Escape Hatch
+**Learning:** Returning a raw "Unauthorized" text response or trapping unauthenticated users on a login screen without a clear exit path creates a dead end, forcing them to use the browser back button, which is poor UX.
+**Action:** Always provide an "escape hatch" (like a "Back to Portal" link) on protected views or login screens so unauthenticated users can easily return to the main application flow.
