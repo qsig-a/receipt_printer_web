@@ -444,8 +444,8 @@ HISTORY_HTML = """
                 <button type="submit" class="btn btn-danger" {% if not logs %}disabled title="No logs to clear"{% endif %}>Clear History</button>
             </form>
         </div>
-        <a href="/" class="btn btn-secondary">Back to Portal</a>
         {% endif %}
+        <a href="/" class="btn btn-secondary">Back to Portal</a>
     </main>
     <script>
         document.addEventListener('DOMContentLoaded', () => {

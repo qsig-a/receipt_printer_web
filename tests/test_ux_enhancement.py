@@ -194,6 +194,14 @@ class TestUXEnhancement(unittest.TestCase):
         html = response.data.decode('utf-8')
         self.assertIn('<span aria-hidden="true">📜</span>', html)
 
+    def test_history_unauthenticated_escape_hatch(self):
+        """Verify that the 'Back to Portal' link is present for unauthenticated users."""
+        response = self.client.get('/history')
+        self.assertEqual(response.status_code, 200)
+        html = response.data.decode('utf-8')
+        self.assertIn('<a href="/" class="btn btn-secondary">Back to Portal</a>', html)
+
+
 if __name__ == '__main__':
 
     unittest.main()
