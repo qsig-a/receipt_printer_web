@@ -204,15 +204,13 @@ function togglePassword(btn, inputId) {
     const input = document.getElementById(inputId);
     if (input.type === 'password') {
         input.type = 'text';
-        btn.innerHTML = '🙈';
-        btn.setAttribute('aria-label', 'Hide password');
-        btn.setAttribute('title', 'Hide password');
+        btn.innerHTML = '<span aria-hidden="true">🙈</span>';
+        btn.setAttribute('aria-pressed', 'true');
         btn.style.color = 'var(--text)';
     } else {
         input.type = 'password';
-        btn.innerHTML = '👁️';
-        btn.setAttribute('aria-label', 'Show password');
-        btn.setAttribute('title', 'Show password');
+        btn.innerHTML = '<span aria-hidden="true">👁️</span>';
+        btn.setAttribute('aria-pressed', 'false');
         btn.style.color = 'var(--text-muted)';
     }
 }
@@ -287,8 +285,8 @@ INDEX_HTML = """
                 <label for="password">Access Key<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
                 <div style="position: relative;">
                     <input type="password" id="password" name="password" placeholder="Keycode" required autocomplete="current-password" style="padding-right: 40px;" {% if status and status.code == 'ACCESS_DENIED' %}aria-invalid="true" aria-errormessage="status-feedback"{% endif %}>
-                    <button type="button" aria-label="Show password" title="Show password" onclick="togglePassword(this, 'password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
-                        👁️
+                    <button type="button" aria-pressed="false" aria-controls="password" aria-label="Show password" title="Show password" onclick="togglePassword(this, 'password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
+                        <span aria-hidden="true">👁️</span>
                     </button>
                 </div>
             </div>
@@ -401,8 +399,8 @@ HISTORY_HTML = """
             <label for="admin_password">Admin Access<span style="color: var(--danger); margin-left: 0.25rem;" aria-hidden="true">*</span></label>
             <div style="position: relative;">
                 <input type="password" id="admin_password" name="admin_password" placeholder="Admin Password" required autocomplete="current-password" style="padding-right: 40px;" {% if error %}aria-invalid="true" aria-errormessage="status-feedback"{% endif %}>
-                <button type="button" aria-label="Show password" title="Show password" onclick="togglePassword(this, 'admin_password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
-                    👁️
+                <button type="button" aria-pressed="false" aria-controls="admin_password" aria-label="Show password" title="Show password" onclick="togglePassword(this, 'admin_password')" style="position: absolute; right: 0; top: 0; height: 100%; width: 40px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); padding: 0; font-size: 1.2rem; transition: color 0.2s;">
+                    <span aria-hidden="true">👁️</span>
                 </button>
             </div>
             <button type="submit" class="btn btn-primary">View Logs</button>

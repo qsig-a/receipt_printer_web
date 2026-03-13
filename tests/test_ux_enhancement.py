@@ -63,12 +63,16 @@ class TestUXEnhancement(unittest.TestCase):
         self.assertIn('onclick="togglePassword(this, \'password\')"', html)
         self.assertIn('aria-label="Show password"', html)
         self.assertIn('title="Show password"', html)
-        self.assertIn('👁️', html)
+        self.assertIn('aria-pressed="false"', html)
+        self.assertIn('aria-controls="password"', html)
+        self.assertIn('<span aria-hidden="true">👁️</span>', html)
 
         # Check for the JS function
         self.assertIn('function togglePassword(btn, inputId)', html)
-        self.assertIn("btn.setAttribute('title', 'Hide password')", html)
-        self.assertIn("btn.setAttribute('title', 'Show password')", html)
+        self.assertIn("btn.setAttribute('aria-pressed', 'true')", html)
+        self.assertIn("btn.setAttribute('aria-pressed', 'false')", html)
+        self.assertIn('<span aria-hidden="true">🙈</span>', html)
+        self.assertIn('<span aria-hidden="true">👁️</span>', html)
 
     def test_textarea_resize_behavior(self):
         """Verify the textarea resize behavior in CSS and auto-resize JS."""
@@ -94,7 +98,9 @@ class TestUXEnhancement(unittest.TestCase):
         self.assertIn("togglePassword(this, 'admin_password')", html)
         self.assertIn('aria-label="Show password"', html)
         self.assertIn('title="Show password"', html)
-        self.assertIn('👁️', html)
+        self.assertIn('aria-pressed="false"', html)
+        self.assertIn('aria-controls="admin_password"', html)
+        self.assertIn('<span aria-hidden="true">👁️</span>', html)
 
     def test_history_page_ux(self):
         """Verify UX enhancements on the History page."""
