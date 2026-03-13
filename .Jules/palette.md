@@ -93,3 +93,11 @@
 ## 2026-03-12 - Auth Failure Dead End Escape Hatch
 **Learning:** Returning a raw "Unauthorized" text response or trapping unauthenticated users on a login screen without a clear exit path creates a dead end, forcing them to use the browser back button, which is poor UX.
 **Action:** Always provide an "escape hatch" (like a "Back to Portal" link) on protected views or login screens so unauthenticated users can easily return to the main application flow.
+
+## 2026-03-13 - State Communication for Toggle Buttons
+**Learning:** Toggle buttons (like password visibility toggles) without explicit state attributes leave screen reader users unsure of the current state or the outcome of their action.
+**Action:** Always use the `aria-pressed` attribute (toggling between `"true"` and `"false"`) on semantic `<button>` elements that act as toggles, and use `aria-controls` to explicitly link them to the element they modify, ensuring clear state communication for assistive technologies.
+
+## 2026-03-13 - Toggle Button Anti-Pattern
+**Learning:** Changing both the `aria-label` (e.g., from "Show password" to "Hide password") and the `aria-pressed` state simultaneously on a toggle button is a known W3C ARIA anti-pattern. Doing both results in confusing screen reader announcements like "Hide password, toggle button, pressed".
+**Action:** For a true toggle button, either keep the `aria-label` static (e.g., "Show password" or "Toggle password visibility") while toggling `aria-pressed` between true/false, OR change the `aria-label` dynamically without using `aria-pressed`. Do not combine both approaches.
