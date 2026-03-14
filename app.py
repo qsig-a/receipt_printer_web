@@ -192,9 +192,16 @@ kbd {
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
 }
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 @media (prefers-reduced-motion: no-preference) {
     .input-error {
         animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    .status-box {
+        animation: slideDown 0.3s ease-out both;
     }
 }
 """

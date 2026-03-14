@@ -31,6 +31,10 @@ class TestShakeAnimation(unittest.TestCase):
         # Check for animation application
         self.assertIn('animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;', html)
 
+        # Check for slideDown keyframes and animation on status box
+        self.assertIn('@keyframes slideDown', html)
+        self.assertIn('animation: slideDown 0.3s ease-out both;', html)
+
     def test_shake_animation_history_css_present(self):
         """Verify that the shake animation CSS is present in the History page HTML."""
         response = self.client.get('/history')
