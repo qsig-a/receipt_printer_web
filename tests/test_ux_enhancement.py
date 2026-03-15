@@ -171,8 +171,12 @@ class TestUXEnhancement(unittest.TestCase):
         self.assertIn('autocomplete="current-password"', html)
 
 
-    def test_scrollable_table_ux(self):
-        """Verify that scrollable tables have sticky headers and accessibility attributes."""
+    @patch('app.get_logs_from_firestore')
+    def test_scrollable_table_ux(self, mock_get_logs):
+        """Verify that scrollable tables have sticky headers, hover states, and accessibility attributes."""
+        # Mock logs to verify row-specific elements
+        mock_get_logs.return_value = [{'time': 'Now', 'source': 'IP', 'status': 'OK', 'msg': 'Hi', 'iso_time': '2025-01-01T12:00:00'}]
+
         # Check history HTML structure by simulating login
         from app import ADMIN_PASSWORD
         response = self.client.post('/history', data={'admin_password': ADMIN_PASSWORD})
@@ -189,6 +193,18 @@ class TestUXEnhancement(unittest.TestCase):
 
         # Check for :focus-visible style for [role="region"]
         self.assertIn('[role="region"]:focus-visible', html)
+
+        # Check for row hover state css
+        self.assertIn('.history-table tbody tr:hover', html)
+
+        # Check for th scope
+        self.assertIn('<th scope="col">Time</th>', html)
+
+        # Check for semantic time tag
+        self.assertIn('<time class="local-time" datetime="2025-01-01T12:00:00">Now</time>', html)
+
+        # Check for correct copy button type
+        self.assertIn('<button type="button" class="copy-btn"', html)
 
     def test_decorative_emoji_hidden(self):
         """Verify that decorative emojis are hidden from screen readers."""

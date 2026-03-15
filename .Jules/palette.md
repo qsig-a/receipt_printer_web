@@ -101,3 +101,7 @@
 ## 2026-03-13 - Toggle Button Anti-Pattern
 **Learning:** Changing both the `aria-label` (e.g., from "Show password" to "Hide password") and the `aria-pressed` state simultaneously on a toggle button is a known W3C ARIA anti-pattern. Doing both results in confusing screen reader announcements like "Hide password, toggle button, pressed".
 **Action:** For a true toggle button, either keep the `aria-label` static (e.g., "Show password" or "Toggle password visibility") while toggling `aria-pressed` between true/false, OR change the `aria-label` dynamically without using `aria-pressed`. Do not combine both approaches.
+
+## 2026-03-14 - Data Table Scannability and Semantics
+**Learning:** Wide data tables without visual aids (like hover states) cause users to lose their place when tracking across columns. Furthermore, generic markup (`<span>` for dates, `<th>` without scope) limits the usefulness of the data for screen reader users and automated parsing.
+**Action:** Always include a subtle `.history-table tbody tr:hover` state for multi-column data tables to improve horizontal tracking. Additionally, ensure table headers explicitly declare `scope="col"`, use semantic `<time datetime="...">` tags for temporal data, and define explicit `type="button"` on in-row utility buttons to prevent accidental form submissions.
