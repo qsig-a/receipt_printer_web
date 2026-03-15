@@ -1,0 +1,3 @@
+## 2024-03-15 - [Firestore BulkWriter Optimization]
+**Learning:** For deleting multiple documents in Firestore, using the `BulkWriter` API is significantly more performant than the standard approach of fetching and deleting in batches (chunking with a `while` loop). The batch chunking approach performs multiple network requests for streaming and committing. The `BulkWriter` batches operations internally, resulting in fewer network calls and about ~35% speedup.
+**Action:** Use `db.bulk_writer()` for high-volume mutations. Ensure `bulk_writer.close()` is called to correctly flush and finalize operations.
