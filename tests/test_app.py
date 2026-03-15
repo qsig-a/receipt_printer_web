@@ -131,22 +131,22 @@ class TestApp(unittest.TestCase):
 
     @patch('app.db')
     def test_clear_history_authorized(self, mock_db):
-        # Mock batch deletion
+        # Mock batch deletion using BulkWriter
         mock_docs = [MagicMock(), MagicMock()]
-        # Mock the chain: db.collection().limit().select([]).stream()
-        # It's called in a loop, so we return docs the first time, then empty the second time
-        mock_db.collection.return_value.limit.return_value.select.return_value.stream.side_effect = [mock_docs, []]
+        # Mock the chain: db.collection().select([]).stream()
+        # For BulkWriter, we just stream once
+        mock_db.collection.return_value.select.return_value.stream.return_value = mock_docs
 
         response = self.client.post('/clear-history', data={'admin_password': 'adminsecret'})
         self.assertEqual(response.status_code, 200) # Renders history
         self.assertIn(b"Print History", response.data)
 
         # Verify select([]) was called
-        mock_db.collection.return_value.limit.return_value.select.assert_called_with([])
+        mock_db.collection.return_value.select.assert_called_with([])
 
-        mock_db.batch.return_value.delete.assert_any_call(mock_docs[0].reference)
-        mock_db.batch.return_value.delete.assert_any_call(mock_docs[1].reference)
-        mock_db.batch.return_value.commit.assert_called()
+        mock_db.bulk_writer.return_value.delete.assert_any_call(mock_docs[0].reference)
+        mock_db.bulk_writer.return_value.delete.assert_any_call(mock_docs[1].reference)
+        mock_db.bulk_writer.return_value.close.assert_called()
 
 if __name__ == '__main__':
     unittest.main()
