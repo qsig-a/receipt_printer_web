@@ -153,6 +153,8 @@ button:focus-visible, a:focus-visible, [role="region"]:focus-visible { outline: 
 }
 .history-table th { background: #111827; padding: 12px; text-align: left; color: var(--text-muted); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
 .history-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; color: var(--text); }
+.history-table tbody tr { transition: background-color 0.2s; }
+.history-table tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
 .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
 .badge-ok { background: rgba(16, 185, 129, 0.2); color: #34d399; }
 .badge-err { background: rgba(239, 68, 68, 0.2); color: #f87171; }
@@ -416,17 +418,17 @@ HISTORY_HTML = """
         <div style="max-height: 500px; overflow-y: auto;" tabindex="0" role="region" aria-label="Print history">
             <table class="history-table">
                 <thead>
-                    <tr><th>Time</th><th>Source</th><th>Status</th><th>Message</th></tr>
+                    <tr><th scope="col">Time</th><th scope="col">Source</th><th scope="col">Status</th><th scope="col">Message</th></tr>
                 </thead>
                 <tbody>
                     {% for log in logs %}
                     <tr>
-                        <td style="white-space: nowrap; color: var(--text-muted);"><span class="local-time" data-iso="{{ log.iso_time }}">{{ log.time }}</span></td>
+                        <td style="white-space: nowrap; color: var(--text-muted);"><time class="local-time" datetime="{{ log.iso_time }}">{{ log.time }}</time></td>
                         <td style="font-family: monospace;">{{ log.source }}</td>
                         <td><span class="badge {% if log.status == 'SUCCESS' %}badge-ok{% else %}badge-err{% endif %}">{{ log.status }}</span></td>
                         <td class="msg-cell">
                             <span class="msg-content">{{ log.msg }}</span>
-                            <button class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy message" title="Copy to clipboard">📋</button>
+                            <button type="button" class="copy-btn" onclick="copyToClipboard(this)" aria-label="Copy message" title="Copy to clipboard">📋</button>
                         </td>
                     </tr>
                     {% else %}
@@ -475,7 +477,7 @@ HISTORY_HTML = """
             });
 
             document.querySelectorAll('.local-time').forEach(el => {
-                const iso = el.getAttribute('data-iso');
+                const iso = el.getAttribute('datetime');
                 if (iso) {
                     const date = new Date(iso);
                     if (!isNaN(date.getTime())) {
