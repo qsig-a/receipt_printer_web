@@ -21,7 +21,7 @@ class BenchmarkIndexPost(unittest.TestCase):
         db.reset_mock()
 
     @patch('app.log_to_firestore')
-    @patch('requests.post')
+    @patch('app.http_session.post')
     def test_benchmark_post_sync(self, mock_post, mock_log_to_firestore):
         # Simulate webhook taking a small amount of time
         mock_response = MagicMock()
