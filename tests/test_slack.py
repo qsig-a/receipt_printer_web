@@ -120,7 +120,7 @@ class TestSlack(unittest.TestCase):
         self.assertIsNone(args[0])
         self.assertEqual(args[2], 'Hello Event')
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     def test_slack_rate_limit_exceeded(self, mock_requests_post):
         """Test blocking a user who exceeds the rate limit."""
         # Limit is 2 per 1 minute.
@@ -159,7 +159,7 @@ class TestSlack(unittest.TestCase):
         self.assertIn('blocked_until', args[0])
         self.assertIsNotNone(args[0]['blocked_until'])
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     def test_slack_currently_blocked(self, mock_requests_post):
         """Test that a blocked user is rejected immediately."""
         now = datetime.now(timezone.utc)
@@ -213,7 +213,7 @@ class TestSlack(unittest.TestCase):
         self.assertIn(b"Sending to printer", response.data)
         mock_process_async.assert_called_once()
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     def test_process_slack_async_success(self, mock_post):
         """Test the async background worker function directly for success."""
         from app import process_slack_async
@@ -227,7 +227,7 @@ class TestSlack(unittest.TestCase):
         # Check response call
         mock_post.assert_any_call('http://response-url', json={"text": "✅ Message sent to printer!", "response_type": "ephemeral"})
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     def test_process_slack_async_failure(self, mock_post):
         """Test the async background worker function for webhook failure."""
         from app import process_slack_async
@@ -246,7 +246,7 @@ class TestSlack(unittest.TestCase):
         args, kwargs = mock_post.call_args_list[1]
         self.assertIn("❌ Error: 500", kwargs['json']['text'])
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     def test_process_slack_async_exception(self, mock_post):
         """Test the async background worker function for connection exception."""
         from app import process_slack_async

@@ -67,7 +67,7 @@ class TestSMS(unittest.TestCase):
         for p in self.patchers:
             p.stop()
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     @patch('app.signalwire_client')
     def test_sms_new_message(self, mock_sw_client, mock_requests_post):
         # Scenario: User sends a new message "Hello"
@@ -92,7 +92,7 @@ class TestSMS(unittest.TestCase):
             body="Please reply with the access password to print your message."
         )
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     @patch('app.signalwire_client')
     def test_sms_verification_success(self, mock_sw_client, mock_requests_post):
         # Scenario: User replies with correct password
@@ -122,7 +122,7 @@ class TestSMS(unittest.TestCase):
             body="✅ Message printed successfully!"
         )
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     @patch('app.signalwire_client')
     def test_sms_verification_failure(self, mock_sw_client, mock_requests_post):
         # Scenario: User replies with wrong password
@@ -149,7 +149,7 @@ class TestSMS(unittest.TestCase):
         # Check if pending deleted
         self.mock_doc_ref.delete.assert_called()
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     @patch('app.signalwire_client')
     def test_sms_whitelist(self, mock_sw_client, mock_requests_post):
         # Scenario: User sends a message from a whitelisted number

@@ -49,7 +49,7 @@ class TestApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Remote Print", response.data)
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     def test_index_post_success(self, mock_post):
         mock_post.return_value.status_code = 200
         response = self.client.post('/', data={'password': 'secret', 'message': 'Hello'})
@@ -68,7 +68,7 @@ class TestApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"LIMIT_EXCEEDED", response.data)
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     def test_index_post_webhook_failure(self, mock_post):
         mock_post.return_value.status_code = 500
         response = self.client.post('/', data={'password': 'secret', 'message': 'Hello'})
@@ -80,7 +80,7 @@ class TestApp(unittest.TestCase):
         mock_log = self.started_patchers[-2] # app.log_to_firestore is second to last
         mock_log.assert_called_with('127.0.0.1', 'HA_ERR_500', 'Hello')
 
-    @patch('app.requests.post')
+    @patch('app.http_session.post')
     def test_index_post_connection_failure(self, mock_post):
         mock_post.side_effect = Exception("Connection refused")
         response = self.client.post('/', data={'password': 'secret', 'message': 'Hello'})
