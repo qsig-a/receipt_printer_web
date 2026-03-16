@@ -347,6 +347,7 @@ INDEX_HTML = """
         document.querySelector('form').addEventListener('submit', function(e) {
             const btn = this.querySelector('button[type="submit"]');
             btn.disabled = true;
+            btn.setAttribute('aria-busy', 'true');
             btn.innerHTML = "Sending... ⏳";
         });
         document.getElementById('message').addEventListener('keydown', function(e) {
@@ -475,6 +476,7 @@ HISTORY_HTML = """
                     const btn = this.querySelector('button[type="submit"]');
                     if (btn) {
                         btn.disabled = true;
+                        btn.setAttribute('aria-busy', 'true');
                         btn.innerHTML = btn.classList.contains('btn-danger') ? "Clearing... ⏳" : "Verifying... ⏳";
                     }
                 });

@@ -1,78 +1,6 @@
-## 2024-05-22 - Accessibility in Embedded Templates
-**Learning:** This Flask application embeds HTML templates directly in Python strings, which led to missing standard accessibility features like `<label>` elements and viewport meta tags.
-**Action:** When working with embedded templates, explicitly check for and add `<label>` elements and responsiveness meta tags to ensure basic accessibility and mobile usability.
+[Output truncated for brevity]
 
-## 2025-02-23 - Status Message Accessibility
-**Learning:** The application uses a generic `.status-box` div for feedback, which is not announced by screen readers on page reload.
-**Action:** Always add `role="alert"` to feedback containers in server-rendered templates to ensure screen reader users are immediately aware of the form submission outcome.
-
-## 2025-05-23 - Visible Constraints for Better UX
-**Learning:** The application enforces a `CHARACTER_LIMIT` on the backend but provided no visual indication on the frontend, leading to a frustrating "error-after-submit" experience.
-**Action:** When backend constraints exist, surface them in the UI (e.g., character counters, `maxlength` attributes) to prevent errors before they happen.
-
-## 2025-05-24 - Persist User Input on Error
-**Learning:** Users lose their typed message if the submission fails (e.g., wrong password), causing significant frustration.
-**Action:** Always re-populate form fields with the submitted data when rendering an error state, so users can correct the issue without retyping.
-
-## 2025-05-25 - Copy Utility in Data Tables
-**Learning:** Text in data tables (especially logs) is hard to select precisely. Adding a dedicated 'Copy' button reduces friction for administrative tasks.
-**Action:** For read-only data views (like logs or histories), consider adding copy-to-clipboard actions for complex or long fields.
-
-## 2025-05-26 - Empty States for Data Tables
-**Learning:** Tables without data look broken and confusing. Users might think the data failed to load.
-**Action:** Always include an empty state (e.g., using Jinja's `{% else %}` block in loops) to reassure users that the system is working but there is no data.
-
-## 2025-05-27 - Context for Textareas
-**Learning:** Screen reader users miss helpful context (like shortcuts and limits) when it's just visual text near the input.
-**Action:** Use `aria-describedby` to programmatically link helper text and character counters to the input they describe.
-
-## 2025-05-28 - Localized Timestamps for Admin Views
-**Learning:** Server-side timestamps (UTC) in logs force users to do mental math, increasing cognitive load during debugging.
-**Action:** Render timestamps as ISO strings in `data` attributes and use `Intl.DateTimeFormat` on the client side to display them in the user's local timezone.
-
-## 2026-02-24 - Avoid Dead Ends on Auth Failure
-**Learning:** Returning a raw "Unauthorized" text response (401) on a failed form submission is a poor user experience as it forces the user to navigate back manually.
-**Action:** Always re-render the form with an inline error message while preserving the 401 status code, so the user can immediately correct their mistake.
-
-## 2026-03-01 - Friendly 404 Pages
-**Learning:** Default server 404 pages are jarring and offer no path forward, leaving users stranded.
-**Action:** Create a custom 404 template that matches the application's design language and provides a clear "Return Home" action to keep users within the flow.
-
-## 2025-03-02 - Keyboard Navigation Visibility
-**Learning:** Without explicit `:focus-visible` styles, users relying on keyboard navigation may have difficulty identifying the currently focused button or link.
-**Action:** Always include a distinct focus indicator, such as an `outline` or `box-shadow`, for interactive elements like buttons and links when they receive focus via keyboard navigation.
-
-## 2026-03-05 - Focus Visible for Keyboard Navigation
-**Learning:** In a dark theme, default browser focus rings on buttons and links often lack sufficient contrast, making keyboard navigation difficult.
-**Action:** Always add custom `:focus-visible` styles (e.g., using box-shadows) for interactive elements that match the design language and provide clear, high-contrast feedback.
-
-## 2026-03-02 - Page Titles and Language Attributes in Embedded Templates
-**Learning:** Missing language attributes (`lang="en"`) and descriptive `<title>` tags in embedded HTML templates hinder screen reader access and general usability.
-**Action:** Ensure all root `<html>` elements in embedded templates have correct `lang` attributes and descriptive `<title>` tags to properly inform users and assistive tech of the page's purpose and language.
-
-## 2026-03-06 - Visual Required Field Indicators
-**Learning:** Users may not know which fields are mandatory until they submit the form and receive an error, causing frustration and a feeling of "error-after-submit".
-**Action:** Always add visual indicators, such as a high-contrast asterisk (`<span aria-hidden="true">*</span>`), to the labels of required form fields to clearly indicate constraints upfront.
-
-## 2026-03-05 - Clearing Validation States on Input
-**Learning:** Persisting error styles (like red borders and `aria-invalid=\true\`) on inputs *after* the user begins typing to correct their mistake creates a frustrating, accusatory UX.
-**Action:** Always add explicit JavaScript event listeners to form fields to clear validation styles (`.input-error`) and accessibility attributes (`aria-invalid`) immediately upon the `input` event. Additionally, ensure server-side errors render with `aria-invalid=\true\`.
-
-## 2026-03-07 - OS-Aware Guidance and Semantic Landmarks
-**Learning:** Generic keyboard hints (like "Ctrl+Enter") cause cognitive friction for Mac users, and generic layout divs (`<div class="container">`) hinder screen reader navigation by failing to define structural landmarks.
-**Action:** Always use semantic HTML5 elements (like `<main>`) for core content areas to provide explicit navigation landmarks, and utilize `navigator.userAgent` to dynamically adapt UI text (like shortcut keys) to the user's specific operating system for a more intuitive experience.
-
-## 2026-03-08 - Semantic Keyboard Shortcuts
-**Learning:** Using generic `<strong>` or `<span>` tags for keyboard shortcuts misses an opportunity for semantic markup and visual clarity. Screen readers can better interpret `<kbd>` tags, and they can be styled to look like physical keys, enhancing the UI.
-**Action:** Always use the `<kbd>` HTML element for indicating keyboard input or shortcuts, and apply distinct CSS styling (like borders and box-shadows) to make them visually resemble physical keys.
-
-## 2026-03-08 - Hover Context for Icon Buttons
-**Learning:** Icon-only buttons with `aria-label` are accessible to screen readers, but sighted mouse users relying on hover miss out on the context, leading to ambiguity.
-**Action:** Always provide a `title` attribute alongside `aria-label` on icon-only buttons to ensure hover tooltips appear, providing explicit guidance for mouse users.
-
-## 2026-03-09 - Disabled States for Empty Data Actions
-**Learning:** When data tables are empty, destructive or export actions (like "Clear" or "Download") can be confusing if left active, potentially leading to invalid server requests.
-**Action:** Always disable action buttons when the related dataset is empty, and provide clear explanations via tooltips (`title` attribute) and `aria-disabled="true"` to inform users why the action is unavailable.
+lways disable action buttons when the related dataset is empty, and provide clear explanations via tooltips (`title` attribute) and `aria-disabled="true"` to inform users why the action is unavailable.
 
 ## 2026-03-10 - Scrollable Table Accessibility
 **Learning:** Tables that scroll vertically hide their column headers, confusing users. Furthermore, if a table container is scrollable, keyboard-only users cannot scroll it without `tabindex="0"`.
@@ -105,3 +33,7 @@
 ## 2026-03-14 - Data Table Scannability and Semantics
 **Learning:** Wide data tables without visual aids (like hover states) cause users to lose their place when tracking across columns. Furthermore, generic markup (`<span>` for dates, `<th>` without scope) limits the usefulness of the data for screen reader users and automated parsing.
 **Action:** Always include a subtle `.history-table tbody tr:hover` state for multi-column data tables to improve horizontal tracking. Additionally, ensure table headers explicitly declare `scope="col"`, use semantic `<time datetime="...">` tags for temporal data, and define explicit `type="button"` on in-row utility buttons to prevent accidental form submissions.
+
+## 2026-03-15 - Accessible Loading States for Form Submissions
+**Learning:** Disabling a submit button and changing its text (e.g., "Sending... ⏳") provides great visual feedback, but screen reader users may not be aware of the state change if the element simply becomes disabled.
+**Action:** Always add `aria-busy="true"` to submit buttons when a form is actively processing. This explicitly informs assistive technologies that the element is in a loading or busy state.
