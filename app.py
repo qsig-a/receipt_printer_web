@@ -794,9 +794,17 @@ def download_csv():
             si.truncate(0)
             si.seek(0)
 
-            logs = get_logs_from_firestore()
-            for log in logs:
-                cw.writerow([log['time'], log['source'], log['status'], log['msg']])
+            # ⚡ Bolt: Stream directly from Firestore instead of loading all logs into memory
+            docs = db.collection(COLLECTION_NAME).order_by('timestamp', direction="DESCENDING").stream()
+            for doc in docs:
+                data = doc.to_dict()
+                ts = data.get('timestamp')
+                time_str = ts.strftime('%Y-%m-%d %H:%M:%S') if ts else "Just now"
+                source = data.get('source') or data.get('ip', 'Unknown')
+                status = data.get('status', 'ERROR')
+                msg = data.get('message', '')
+
+                cw.writerow([time_str, source, status, msg])
                 yield si.getvalue()
                 si.truncate(0)
                 si.seek(0)

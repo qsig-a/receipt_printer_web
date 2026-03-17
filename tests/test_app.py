@@ -117,9 +117,20 @@ class TestApp(unittest.TestCase):
         response = self.client.post('/download-csv', data={'admin_password': 'wrong'})
         self.assertEqual(response.status_code, 401)
 
-    @patch('app.get_logs_from_firestore')
-    def test_download_csv_authorized(self, mock_get_logs):
-        mock_get_logs.return_value = [{'time': '2023-01-01', 'source': '1.2.3.4', 'status': 'SUCCESS', 'msg': 'Test', 'iso_time': '2023-01-01T00:00:00'}]
+    @patch('app.db')
+    def test_download_csv_authorized(self, mock_db):
+        class MockDoc:
+            def to_dict(self):
+                from datetime import datetime
+                return {
+                    'timestamp': datetime(2023, 1, 1),
+                    'source': '1.2.3.4',
+                    'status': 'SUCCESS',
+                    'message': 'Test'
+                }
+        mock_docs = [MockDoc()]
+        mock_db.collection.return_value.order_by.return_value.stream.return_value = mock_docs
+
         response = self.client.post('/download-csv', data={'admin_password': 'adminsecret'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Disposition'], 'attachment; filename=history.csv')
