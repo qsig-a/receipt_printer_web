@@ -438,8 +438,10 @@ HISTORY_HTML = """
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                            No print history found <span aria-hidden="true">📭</span>
+                        <td colspan="4" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;" aria-hidden="true">📭</div>
+                            <div style="font-weight: 500; margin-bottom: 0.5rem; color: var(--text);">No print history found</div>
+                            <div style="font-size: 0.9rem;">Send a message from the portal to see it here.</div>
                         </td>
                     </tr>
                     {% endfor %}

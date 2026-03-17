@@ -37,3 +37,6 @@ lways disable action buttons when the related dataset is empty, and provide clea
 ## 2026-03-15 - Accessible Loading States for Form Submissions
 **Learning:** Disabling a submit button and changing its text (e.g., "Sending... ⏳") provides great visual feedback, but screen reader users may not be aware of the state change if the element simply becomes disabled.
 **Action:** Always add `aria-busy="true"` to submit buttons when a form is actively processing. This explicitly informs assistive technologies that the element is in a loading or busy state.
+## 2026-03-17 - Empty States with Call-to-Action
+**Learning:** Basic empty states (like "No print history found") leave users at a dead end, especially in a new application where they might not know how to generate data.
+**Action:** Always enhance empty states with a helpful call-to-action or guidance (e.g., "Send a message from the portal to see it here.") to direct users towards the desired next step.
