@@ -860,7 +860,7 @@ def sms_webhook():
             return "OK"
 
         # New message -> Store it and ask for password
-        pending_ref.set({
+        executor.submit(pending_ref.set, {
             'message': body,
             'timestamp': firestore.SERVER_TIMESTAMP
         })

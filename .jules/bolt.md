@@ -1,11 +1,2 @@
-## 2024-03-15 - [Firestore BulkWriter Optimization]
-**Learning:** For deleting multiple documents in Firestore, using the `BulkWriter` API is significantly more performant than the standard approach of fetching and deleting in batches (chunking with a `while` loop). The batch chunking approach performs multiple network requests for streaming and committing. The `BulkWriter` batches operations internally, resulting in fewer network calls and about ~35% speedup.
-**Action:** Use `db.bulk_writer()` for high-volume mutations. Ensure `bulk_writer.close()` is called to correctly flush and finalize operations.
-
-## 2024-05-18 - [Connection Pooling for Webhooks]
-**Learning:** Making repeated webhook HTTP requests (like sending HomeAssistant or Slack notifications) using `requests.post()` creates a new TCP connection every time. Instantiating and reusing a global `requests.Session()` object (`http_session = requests.Session()`) significantly reduces connection overhead, yielding a ~56% speedup for repeated requests.
-**Action:** Use `requests.Session()` instead of the module-level `requests` functions when making multiple requests to the same host or when making frequent outward HTTP calls in the background. Note that this requires updating unit tests to `@patch('app.http_session.post')` instead of `@patch('app.requests.post')`.
-
-## 2024-06-25 - [Memory-efficient Large Dataset Exports]
-**Learning:** For exporting large datasets from Firestore (e.g. downloading CSV logs), iterating over `db.collection(...).stream()` directly instead of pre-fetching records into a list first eliminates high memory consumption, resulting in an $O(1)$ memory operation compared to an $O(N)$ operation. Calling `list()` or appending `.stream()` objects to a list first before formatting defeats the advantage of generator functions.
-**Action:** Avoid loading large Firestore streams into memory for large exports; format and yield directly within the generator loop.
+## 2026-03-18 - [Offload synchronous pending_ref.set to background thread in sms_webhook]
+The synchronous Firestore operation `pending_ref.set()` in the `/sms` webhook route was blocking the network call, slowing down the response. Moving it to be handled by the background ThreadPoolExecutor via `executor.submit(pending_ref.set, ...)` significantly improved the response time. The benchmark showed a speedup from ~1.00s to ~0.02s.
