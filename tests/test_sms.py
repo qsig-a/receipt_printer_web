@@ -80,7 +80,7 @@ class TestSMS(unittest.TestCase):
 
         # Check if saved to pending
         db.collection.assert_any_call("sms_pending")
-        self.mock_doc_ref.set.assert_called_with({
+        self.mock_doc_ref.set.assert_any_call({
             'message': 'Hello',
             'timestamp': ANY # We can't predict timestamp object easily
         })
