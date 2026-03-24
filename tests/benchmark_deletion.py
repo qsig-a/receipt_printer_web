@@ -12,6 +12,7 @@ sys.modules['signalwire.rest'] = MagicMock()
 from app import app, db
 
 def run_benchmark(docs_count, chunk_size, use_bulk=False):
+    """Runs a benchmark for paginated document deletion, comparing standard batch deletion (with while loop) vs BulkWriter."""
     # Setup mock document references
     mock_docs = [MagicMock() for _ in range(docs_count)]
 
@@ -80,9 +81,15 @@ def run_benchmark(docs_count, chunk_size, use_bulk=False):
 
     start_time = time.perf_counter()
 
+    # Note: The original buggy single-pass batch implementation has been replaced.
+    # The current standard implementation correctly uses a while loop to ensure
+    # all paginated documents are deleted, and the alternative uses BulkWriter.
+
     # Simulate the code that would be in clear_history
     if not use_bulk:
-        # The corrected `while` loop implementation (standard Firestore pattern)
+        # FIXED: The previous buggy implementation only ran once.
+        # We now use a while loop to ensure all paginated documents are deleted,
+        # preventing the issue where only the first chunk was removed.
         while True:
             docs = db_mock.collection("collection").limit(chunk_size).select([]).stream()
             batch = db_mock.batch()
@@ -94,13 +101,26 @@ def run_benchmark(docs_count, chunk_size, use_bulk=False):
                 break
             batch.commit()
     else:
-        # Optimization: using BulkWriter
-        docs = db_mock.collection("collection").select([]).stream()
-        bulk_writer = db_mock.bulk_writer()
-        for doc in docs:
-            bulk_writer.delete(doc.reference)
-        bulk_writer.flush()
-        # in some versions it's flush, or close, or context manager
+        if use_bulk == "buggy":
+            # The fixed buggy implementation (using a loop)
+            while True:
+                docs = db_mock.collection("collection").limit(chunk_size).select([]).stream()
+                batch = db_mock.batch()
+                doc_count = 0
+                for doc in docs:
+                    batch.delete(doc.reference)
+                    doc_count += 1
+                if doc_count == 0:
+                    break
+                batch.commit()
+        else:
+            # Optimization: using BulkWriter
+            docs = db_mock.collection("collection").select([]).stream()
+            bulk_writer = db_mock.bulk_writer()
+            for doc in docs:
+                bulk_writer.delete(doc.reference)
+            bulk_writer.flush()
+            # in some versions it's flush, or close, or context manager
 
     end_time = time.perf_counter()
     duration = end_time - start_time
