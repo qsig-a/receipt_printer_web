@@ -13,6 +13,15 @@ from app import app, ACCESS_PASSWORD
 class TestValidationStates(unittest.TestCase):
     def setUp(self):
         self.client = app.test_client()
+        self.patchers = [
+            patch('app.executor')
+        ]
+        for p in self.patchers:
+            p.start()
+
+    def tearDown(self):
+        for p in self.patchers:
+            p.stop()
 
     def test_aria_invalid_on_access_denied(self):
         response = self.client.post('/', data={'password': 'wrong', 'message': 'test'})
