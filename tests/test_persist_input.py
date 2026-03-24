@@ -18,7 +18,8 @@ class TestPersistInput(unittest.TestCase):
             patch('app.ACCESS_PASSWORD', 'secret'),
             patch('app.WEBHOOK_URL', 'http://fake-printer'),
             patch('app.CHARACTER_LIMIT', 100),
-            patch('app.log_to_firestore', MagicMock())
+            patch('app.log_to_firestore', MagicMock()),
+            patch('app.executor')
         ]
         for p in self.patchers:
             p.start()
