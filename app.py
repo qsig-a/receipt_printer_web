@@ -877,14 +877,14 @@ def sms_webhook():
             future = executor.submit(process_sms_async, from_number, WEBHOOK_URL, original_message)
 
             # Clear pending status
-            pending_ref.delete()
+            executor.submit(pending_ref.delete)
         else:
             # Password incorrect
-            log_to_firestore(from_number, "DENIED", original_message)
+            executor.submit(log_to_firestore, from_number, "DENIED", original_message)
             executor.submit(send_sms, from_number, "❌ Invalid password. Access denied.")
             # Delete pending state to enforce "Send Message -> Send Password" flow.
             # If they fail password, they start over. This prevents stuck states.
-            pending_ref.delete()
+            executor.submit(pending_ref.delete)
 
     return "OK"
 
