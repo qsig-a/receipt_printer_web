@@ -884,7 +884,7 @@ def sms_webhook():
             executor.submit(send_sms, from_number, "❌ Invalid password. Access denied.")
             # Delete pending state to enforce "Send Message -> Send Password" flow.
             # If they fail password, they start over. This prevents stuck states.
-            pending_ref.delete()
+            executor.submit(pending_ref.delete)
 
     return "OK"
 
