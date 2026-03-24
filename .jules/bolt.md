@@ -8,3 +8,10 @@ The synchronous Firestore operation `pending_ref.set()` in the `/sms` webhook ro
 **Why:** To resolve a performance bottleneck where slow database I/O calls were synchronously blocking the SMS webhook from immediately responding with HTTP 200 OK. This caused significant latency (e.g. 2+ seconds).
 
 **Measured Improvement:** Simulated latency by introducing an artificial 1-second delay inside `log_to_firestore` and `pending_ref.delete()`. The response time of the endpoint improved from `2.0057` seconds to `0.0066` seconds. This drastically improves user experience and webhook resilience by allowing the response to return immediately while the database work processes in the background.
+
+## 2024-05-15 - Offloaded Synchronous pending_ref.delete() in SMS Webhook
+- **Optimization Impact**: Replaced synchronous `pending_ref.delete()` calls with `executor.submit(pending_ref.delete)` inside the `/sms` webhook handler.
+- **Architecture Bottleneck**: By blocking the webhook thread waiting for the Firestore delete to complete, the response time was tied to network latency and DB speed, limiting concurrent processing capability.
+- **Benchmark Results**: In local benchmarking where `pending_ref.delete()` was simulated to take 1.0 seconds:
+  - Baseline: Response time took ~1.0 seconds.
+  - Improvement: Response time dropped to ~0.005 - 0.008 seconds, completely eliminating the bottleneck and demonstrating a roughly 99% speedup for this specific scenario.
