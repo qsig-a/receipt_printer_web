@@ -583,13 +583,11 @@ def check_slack_rate_limit(user_id):
     # Filter timestamps
     cutoff = now - timedelta(minutes=SLACK_LIMIT_PERIOD)
 
-    recent_timestamps = [
-        t for t in [
-            t.replace(tzinfo=timezone.utc) if t.tzinfo is None else t
-            for t in timestamps
-        ]
-        if t > cutoff
-    ]
+    recent_timestamps = []
+    for t in timestamps:
+        t_utc = t.replace(tzinfo=timezone.utc) if t.tzinfo is None else t
+        if t_utc > cutoff:
+            recent_timestamps.append(t_utc)
 
     if len(recent_timestamps) >= SLACK_MESSAGE_LIMIT:
         block_duration = timedelta(minutes=SLACK_LIMIT_PERIOD)
